@@ -10,6 +10,8 @@
 #include <string>
 #include <unordered_map>
 
+namespace {
+
 std::unordered_map<std::string, Ast::Kind> termLookupTable = {
     {"Int", Ast::IntKind},
     {"Str", Ast::StrKind},
@@ -40,7 +42,7 @@ Ast::Parameter createParameterFromJson(const Json::Value &json) {
   return {json["text"].asString()};
 }
 
-std::shared_ptr<Ast::Node> createTermFromJson(const Json::Value &json) {
+std::unique_ptr<Ast::Node> createTermFromJson(const Json::Value &json) {
   has_properties_or_abort(json, "kind", "location");
 
   std::string kind = json["kind"].asString();
@@ -49,131 +51,95 @@ std::shared_ptr<Ast::Node> createTermFromJson(const Json::Value &json) {
 
   Ast::Kind termKind = termLookupTable.find(kind)->second;
 
-  // Auxiliar vector to get argument list
-  std::vector<std::shared_ptr<Ast::Node>> argVec;
-
-  // Auxiliar vector to get Parameter list
-  std::vector<Ast::Parameter> paramVec;
-  bool error = false;
-
   switch (termKind) {
   case Ast::IntKind:
-    error = !json.isMember("value");
-    if (error)
-      break;
-    return std::make_shared<Ast::Int>(json["value"].asInt());
+    has_properties_or_abort(json, "value");
+    return std::make_unique<Ast::Int>(json["value"].asInt());
 
   case Ast::StrKind:
-    error = !json.isMember("value");
-    if (error)
-      break;
-    return std::make_shared<Ast::Str>(json["value"].asString());
+    has_properties_or_abort(json, "value");
+    return std::make_unique<Ast::Str>(json["value"].asString());
 
-  case Ast::CallKind:
-    error = !json.isMember("arguments");
-    error |= !json.isMember("callee");
-    if (error)
-      break;
-    for (const Json::Value &js : json["arguments"]) {
+  case Ast::CallKind: {
+    has_properties_or_abort(json, "arguments", "callee");
+
+    std::vector<std::unique_ptr<Ast::Node>> argVec;
+    for (const Json::Value &js : json["arguments"])
       argVec.push_back(createTermFromJson(js));
-    }
-    return std::make_shared<Ast::Call>(createTermFromJson(json["callee"]),
-                                       argVec);
+
+    return std::make_unique<Ast::Call>(createTermFromJson(json["callee"]),
+                                       std::move(argVec));
+  }
 
   case Ast::BinaryKind:
-    error = !json.isMember("lhs");
-    error |= !json.isMember("op");
-    error |= !json.isMember("rhs");
-    if (error)
-      break;
-    return std::make_shared<Ast::Binary>(createTermFromJson(json["lhs"]),
+    has_properties_or_abort(json, "lhs", "op", "rhs");
+
+    return std::make_unique<Ast::Binary>(createTermFromJson(json["lhs"]),
                                          createBinaryOpFromJson(json["op"]),
                                          createTermFromJson(json["rhs"]));
 
-  case Ast::FunctionKind:
-    error = !json.isMember("parameters");
-    error |= !json.isMember("value");
-    error |= !json.isMember("location");
-    if (error)
-      break;
+  case Ast::FunctionKind: {
+    has_properties_or_abort(json, "parameters", "value", "location");
+
+    std::vector<Ast::Parameter> paramVec;
     for (Json::Value js : json["parameters"]) {
-      paramVec.push_back(createParameterFromJson(js));
+      has_properties_or_abort(json, "text");
+      paramVec.push_back(json["text"].asString());
     }
-    return std::make_shared<Ast::Function>(paramVec,
+
+    return std::make_unique<Ast::Function>(paramVec,
                                            createTermFromJson(json["value"]));
+  }
 
   case Ast::LetKind:
-    error = !json.isMember("name");
-    error |= !json.isMember("value");
-    error |= !json.isMember("next");
-    if (error)
-      break;
-    return std::make_shared<Ast::Let>(createParameterFromJson(json["name"]),
+    has_properties_or_abort(json, "name", "value", "next");
+    return std::make_unique<Ast::Let>(createParameterFromJson(json["name"]),
                                       createTermFromJson(json["value"]),
                                       createTermFromJson(json["next"]));
 
   case Ast::IfKind:
-    error = !json.isMember("condition");
-    error |= !json.isMember("then");
-    error |= !json.isMember("otherwise");
-    if (error)
-      break;
-    return std::make_shared<Ast::If>(createTermFromJson(json["condition"]),
+    has_properties_or_abort(json, "condition", "then", "otherwise");
+
+    return std::make_unique<Ast::If>(createTermFromJson(json["condition"]),
                                      createTermFromJson(json["then"]),
                                      createTermFromJson(json["otherwise"]));
 
   case Ast::PrintKind:
-    error = !json.isMember("value");
-    if (error)
-      break;
-    return std::make_shared<Ast::Print>(createTermFromJson(json["value"]));
+    has_properties_or_abort(json, "value");
+    return std::make_unique<Ast::Print>(createTermFromJson(json["value"]));
 
   case Ast::FirstKind:
-    error = !json.isMember("value");
-    if (error)
-      break;
-    return std::make_shared<Ast::First>(createTermFromJson(json["value"]));
+    has_properties_or_abort(json, "value");
+    return std::make_unique<Ast::First>(createTermFromJson(json["value"]));
 
   case Ast::SecondKind:
-    error = !json.isMember("value");
-    if (error)
-      break;
-    return std::make_shared<Ast::Second>(createTermFromJson(json["value"]));
+    has_properties_or_abort(json, "value");
+    return std::make_unique<Ast::Second>(createTermFromJson(json["value"]));
 
   case Ast::BoolKind:
-    error = !json.isMember("value");
-    if (error)
-      break;
-    return std::make_shared<Ast::Bool>(json["value"].asBool());
+    has_properties_or_abort(json, "value");
+    return std::make_unique<Ast::Bool>(json["value"].asBool());
 
   case Ast::TupleKind:
-    error = !json.isMember("first");
-    error |= !json.isMember("second");
-    if (error)
-      break;
-    return std::make_shared<Ast::Tuple>(createTermFromJson(json["first"]),
+    has_properties_or_abort(json, "first", "second");
+    return std::make_unique<Ast::Tuple>(createTermFromJson(json["first"]),
                                         createTermFromJson(json["second"]));
 
   case Ast::VarKind:
-    error = !json.isMember("text");
-    if (error)
-      break;
-    return std::make_shared<Ast::Var>(json["text"].asString());
+    has_properties_or_abort(json, "text");
+    return std::make_unique<Ast::Var>(json["text"].asString());
 
   default:
-    if (error)
-      ABORT("Term illformed on " + json["location"]["file"].asString() + "(" +
-            std::to_string(json["location"]["start"].asInt()) + ", " +
-            std::to_string(json["location"]["end"].asInt()) + ")");
+    ABORT(std::string("Term ill-formed on ")
+              .append(json["location"]["file"].asString())
+              .append("(")
+              .append(std::to_string(json["location"]["start"].asInt()))
+              .append(", ")
+              .append(std::to_string(json["location"]["end"].asInt()))
+              .append(")"));
   }
 
   __builtin_unreachable();
-}
-
-std::shared_ptr<Ast::File> Ast::createNodeFromJson(const Json::Value &json) {
-  has_properties_or_abort(json, "name", "expression", "location");
-  return std::make_shared<Ast::File>(json["name"].asString(),
-                                     createTermFromJson(json["expression"]));
 }
 
 std::string getOpString(Ast::BinaryOp op) {
@@ -209,73 +175,87 @@ std::string getOpString(Ast::BinaryOp op) {
 }
 
 std::string getStringValueOfTerm(const Ast::Term &value) {
-  std::string response = "";
+  std::string response;
   bool first = true;
   switch (value->kind) {
   case Ast::IntKind:
-    response = std::to_string(std::static_pointer_cast<Ast::Int>(value)->value);
+    response.append(
+        std::to_string(static_cast<Ast::Int *>(value.get())->value));
     break;
+
   case Ast::BoolKind:
-    response =
-        std::static_pointer_cast<Ast::Bool>(value)->value ? "true" : "false";
+    response.append(static_cast<Ast::Bool *>(value.get())->value ? "true"
+                                                                 : "false");
     break;
+
   case Ast::StrKind:
-    response = "\"" + std::static_pointer_cast<Ast::Str>(value)->value + "\"";
+    response.append("\"")
+        .append(static_cast<Ast::Str *>(value.get())->value)
+        .append("\"");
     break;
+
   case Ast::TupleKind:
-    response = "(";
-    response += getStringValueOfTerm(
-        std::static_pointer_cast<Ast::Tuple>(value)->first);
-    response += ", ";
-    response += getStringValueOfTerm(
-        std::static_pointer_cast<Ast::Tuple>(value)->second);
-    response += ")";
+    response.append("(")
+        .append(
+            getStringValueOfTerm(static_cast<Ast::Tuple *>(value.get())->first))
+        .append(", ")
+        .append(getStringValueOfTerm(
+            static_cast<Ast::Tuple *>(value.get())->second))
+        .append(")");
     break;
+
   case Ast::FunctionKind:
-    response = "<#";
-    for (Ast::Parameter par :
-         std::static_pointer_cast<Ast::Function>(value)->parameters) {
+    response.append("<#");
+    for (const auto &param :
+         static_cast<Ast::Function *>(value.get())->parameters) {
       if (!first)
-        response += ", ";
+        response.append(", ");
       first = false;
-      response += par.text;
+      response.append(param);
     }
-    response += ">";
-    response += '\n';
+    response.append(">\n");
     break;
+
   case Ast::CallKind:
-    response = "Call(" +
-               getStringValueOfTerm(
-                   std::static_pointer_cast<Ast::Call>(value)->callee) +
-               ")";
-    response += '\n';
+    response.append(
+        "Call(" +
+        getStringValueOfTerm(static_cast<Ast::Call *>(value.get())->callee) +
+        ")\n");
     break;
+
   case Ast::BinaryKind:
-    response +=
-        getStringValueOfTerm(std::static_pointer_cast<Ast::Binary>(value)->lhs);
-    response += getOpString(std::static_pointer_cast<Ast::Binary>(value)->op);
-    response +=
-        getStringValueOfTerm(std::static_pointer_cast<Ast::Binary>(value)->rhs);
-    response += '\n';
+    response
+        .append(
+            getStringValueOfTerm(static_cast<Ast::Binary *>(value.get())->lhs))
+        .append(getOpString(static_cast<Ast::Binary *>(value.get())->op))
+        .append(
+            getStringValueOfTerm(static_cast<Ast::Binary *>(value.get())->rhs))
+        .append("\n");
     break;
+
   case Ast::LetKind:
-    response +=
-        "auto " + std::static_pointer_cast<Ast::Let>(value)->name.text + " = " +
-        getStringValueOfTerm(std::static_pointer_cast<Ast::Let>(value)->value);
-    response += ";\n";
-    response +=
-        getStringValueOfTerm(std::static_pointer_cast<Ast::Let>(value)->next);
+    response.append("auto ")
+        .append(static_cast<Ast::Let *>(value.get())->name)
+        .append(" = ")
+        .append(
+            getStringValueOfTerm(static_cast<Ast::Let *>(value.get())->value))
+        .append(";\n")
+        .append(
+            getStringValueOfTerm(static_cast<Ast::Let *>(value.get())->next));
     break;
+
   case Ast::PrintKind:
-    response += "print(" +
-                getStringValueOfTerm(
-                    std::static_pointer_cast<Ast::Print>(value)->value) +
-                ")";
+    response.append("print(")
+        .append(
+            getStringValueOfTerm(static_cast<Ast::Print *>(value.get())->value))
+        .append(")");
   }
   return response;
 }
 
-int Ast::File::dumpToFile(std::string filename) {
+} // namespace
+
+int Ast::File::dumpToFile(const std::string &filename) {
   std::ofstream file;
   file.open(filename);
 
@@ -285,4 +265,10 @@ int Ast::File::dumpToFile(std::string filename) {
   file << "}\n";
   file.close();
   return 0;
+}
+
+std::unique_ptr<Ast::File> Ast::createNodeFromJson(const Json::Value &json) {
+  has_properties_or_abort(json, "name", "expression", "location");
+  return std::make_unique<Ast::File>(json["name"].asString(),
+                                     createTermFromJson(json["expression"]));
 }

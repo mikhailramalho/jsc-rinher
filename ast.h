@@ -2,7 +2,6 @@
 #include <jsoncpp/json/json.h>
 #include <jsoncpp/json/value.h>
 #include <memory>
-#include <shared_mutex>
 #include <string>
 #include <vector>
 
@@ -28,23 +27,19 @@ enum Kind {
 
 enum BinaryOp { Add, Sub, Mul, Div, Rem, Eq, Neq, Lt, Gt, Lte, Gte, And, Or };
 
-struct Parameter {
-  std::string text;
-};
-
 struct Node {
   Kind kind;
   Node(Kind k) : kind(k) {}
   virtual ~Node() = default;
 };
 
-typedef std::shared_ptr<Node> Term;
+typedef std::unique_ptr<Node> Term;
 
 struct File {
-  std::string name;
+  const std::string name;
   Term term;
-  File(const std::string &_name, Term t) : name(_name), term(t) {}
-  int dumpToFile(std::string filename);
+  File(const std::string &_name, Term t) : name(_name), term(std::move(t)) {}
+  int dumpToFile(const std::string &filename);
 };
 
 struct Int : public Node {
@@ -54,8 +49,8 @@ struct Int : public Node {
 };
 
 struct Str : public Node {
-  std::string value;
-  Str(std::string value) : Node(StrKind), value(value) {}
+  const std::string value;
+  Str(const std::string &value) : Node(StrKind), value(value) {}
   ~Str() override = default;
 };
 
@@ -69,7 +64,7 @@ struct Call : public Node {
   Term callee;
   std::vector<Term> arguments;
   Call(Term callee, std::vector<Term> arguments)
-      : Node(CallKind), callee(callee), arguments(arguments) {}
+      : Node(CallKind), callee(std::move(callee)), arguments(std::move(arguments)) {}
   ~Call() override = default;
 };
 
@@ -78,7 +73,8 @@ struct Binary : public Node {
   BinaryOp op;
   Term rhs;
   Binary(Term lhs, BinaryOp op, Term rhs)
-      : Node(BinaryKind), lhs(lhs), op(op), rhs(rhs) {}
+      : Node(BinaryKind), lhs(std::move(lhs)), op(std::move(op)),
+        rhs(std::move(rhs)) {}
   ~Binary() override = default;
 };
 
@@ -86,21 +82,24 @@ struct Tuple : public Node {
   Term first;
   Term second;
   Tuple(Term first, Term second)
-      : Node(TupleKind), first(first), second(second) {}
+      : Node(TupleKind), first(std::move(first)), second(std::move(second)) {}
   ~Tuple() override = default;
 };
 
 struct Var : public Node {
-  std::string text;
-  Var(std::string text) : Node(VarKind), text(text) {}
+  const std::string text;
+  Var(const std::string &text) : Node(VarKind), text(text) {}
   ~Var() override = default;
 };
+
+typedef std::string Parameter;
 
 struct Function : public Node {
   std::vector<Parameter> parameters;
   Term value;
-  Function(std::vector<Parameter> parameters, Term value)
-      : Node(FunctionKind), parameters(parameters), value(value) {}
+  Function(const std::vector<Parameter> &parameters, Term value)
+      : Node(FunctionKind), parameters(std::move(parameters)),
+        value(std::move(value)) {}
   ~Function() override = default;
 };
 
@@ -109,35 +108,37 @@ struct Let : public Node {
   Term value;
   Term next;
   Let(Parameter name, Term value, Term next)
-      : Node(LetKind), name(name), value(value), next(next){};
+      : Node(LetKind), name(name), value(std::move(value)),
+        next(std::move(next)){};
   ~Let() override = default;
 };
 
 struct If : public Node {
   Term condition, then, otherwise;
   If(Term condition, Term then, Term otherwise)
-      : Node(IfKind), condition(condition), then(then), otherwise(otherwise) {}
+      : Node(IfKind), condition(std::move(condition)), then(std::move(then)),
+        otherwise(std::move(otherwise)) {}
   ~If() override = default;
 };
 
 struct Print : public Node {
   Term value;
-  Print(Term value) : Node(PrintKind), value(value) {}
+  Print(Term value) : Node(PrintKind), value(std::move(value)) {}
   ~Print() override = default;
 };
 
 struct First : public Node {
   Term value;
-  First(Term value) : Node(FirstKind), value(value) {}
+  First(Term value) : Node(FirstKind), value(std::move(value)) {}
   ~First() override = default;
 };
 
 struct Second : public Node {
   Term value;
-  Second(Term value) : Node(SecondKind), value(value) {}
+  Second(Term value) : Node(SecondKind), value(std::move(value)) {}
   ~Second() override = default;
 };
 
-std::shared_ptr<Ast::File> createNodeFromJson(const Json::Value &json);
+std::unique_ptr<Ast::File> createNodeFromJson(const Json::Value &json);
 
 }; // namespace Ast
