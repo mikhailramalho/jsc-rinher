@@ -262,8 +262,7 @@ int Ast::File::dumpToFile(const std::string &filename) const {
   return 0;
 }
 
-auto Ast::createNodeFromJson(const Json::Value &json)
-    -> std::unique_ptr<Ast::File> {
+std::unique_ptr<Ast::File> Ast::createNodeFromJson(const Json::Value &json) {
   has_properties_or_abort(json, "name", "expression", "location");
   return std::make_unique<Ast::File>(json["name"].asString(),
                                      createTermFromJson(json["expression"]));
