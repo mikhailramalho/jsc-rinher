@@ -1,11 +1,9 @@
-#include <cmath>
-#include <jsoncpp/json/json.h>
+#pragma once
+
 #include <jsoncpp/json/value.h>
 #include <memory>
 #include <string>
 #include <vector>
-
-#pragma once
 
 namespace Ast {
 
@@ -29,113 +27,113 @@ enum BinaryOp { Add, Sub, Mul, Div, Rem, Eq, Neq, Lt, Gt, Lte, Gte, And, Or };
 
 struct Node {
   Kind kind;
-  Node(Kind k) : kind(k) {}
+  explicit Node(Kind k) : kind(k) {}
   virtual ~Node() = default;
-};
+} __attribute__((aligned(4)));
 
-typedef std::unique_ptr<Node> Term;
+using Term = std::unique_ptr<Node>;
 
 struct File {
   const std::string name;
-  Term term;
+  Term term{};
   File(const std::string &_name, Term t) : name(_name), term(std::move(t)) {}
-  int dumpToFile(const std::string &filename);
-};
+  int dumpToFile(const std::string &filename) const;
+} __attribute__((aligned(16)));
 
 struct Int : public Node {
-  int32_t value;
-  Int(int32_t value) : Node(IntKind), value(value) {}
+  int32_t value{};
+  explicit Int(int32_t value) : Node(IntKind), value(value) {}
   ~Int() override = default;
-};
+} __attribute__((aligned(4)));
 
 struct Str : public Node {
-  const std::string value;
-  Str(const std::string &value) : Node(StrKind), value(value) {}
+  const std::string value{};
+  explicit Str(const std::string &&value) : Node(StrKind), value(value) {}
   ~Str() override = default;
-};
+} __attribute__((aligned(32)));
 
 struct Bool : public Node {
   bool value;
-  Bool(bool value) : Node(BoolKind), value(value) {}
+  explicit Bool(bool value) : Node(BoolKind), value(value) {}
   ~Bool() override = default;
-};
+} __attribute__((aligned(1)));
 
 struct Call : public Node {
-  Term callee;
-  std::vector<Term> arguments;
+  Term callee{};
+  std::vector<Term> arguments{};
   Call(Term callee, std::vector<Term> arguments)
-      : Node(CallKind), callee(std::move(callee)), arguments(std::move(arguments)) {}
+      : Node(CallKind), callee(std::move(callee)),
+        arguments(std::move(arguments)) {}
   ~Call() override = default;
-};
+} __attribute__((aligned(32)));
 
 struct Binary : public Node {
-  Term lhs;
+  Term lhs{};
   BinaryOp op;
-  Term rhs;
+  Term rhs{};
   Binary(Term lhs, BinaryOp op, Term rhs)
-      : Node(BinaryKind), lhs(std::move(lhs)), op(std::move(op)),
-        rhs(std::move(rhs)) {}
+      : Node(BinaryKind), lhs(std::move(lhs)), op(op), rhs(std::move(rhs)) {}
   ~Binary() override = default;
-};
+} __attribute__((aligned(32)));
 
 struct Tuple : public Node {
-  Term first;
-  Term second;
+  Term first{};
+  Term second{};
   Tuple(Term first, Term second)
       : Node(TupleKind), first(std::move(first)), second(std::move(second)) {}
   ~Tuple() override = default;
-};
+} __attribute__((aligned(16)));
 
 struct Var : public Node {
-  const std::string text;
-  Var(const std::string &text) : Node(VarKind), text(text) {}
+  const std::string text{};
+  explicit Var(std::string text) : Node(VarKind), text(std::move(text)) {}
   ~Var() override = default;
-};
+} __attribute__((aligned(32)));
 
-typedef std::string Parameter;
+using Parameter = std::string;
 
 struct Function : public Node {
-  std::vector<Parameter> parameters;
-  Term value;
-  Function(const std::vector<Parameter> &parameters, Term value)
+  std::vector<Parameter> parameters{};
+  Term value{};
+  Function(std::vector<Parameter> parameters, Term value)
       : Node(FunctionKind), parameters(std::move(parameters)),
         value(std::move(value)) {}
   ~Function() override = default;
-};
+} __attribute__((aligned(32)));
 
 struct Let : public Node {
-  Parameter name;
-  Term value;
-  Term next;
-  Let(Parameter name, Term value, Term next)
+  const Parameter name{};
+  Term value{};
+  Term next{};
+  Let(const Parameter &&name, Term value, Term next)
       : Node(LetKind), name(name), value(std::move(value)),
         next(std::move(next)){};
   ~Let() override = default;
-};
+} __attribute__((aligned(64)));
 
 struct If : public Node {
-  Term condition, then, otherwise;
+  Term condition{}, then{}, otherwise{};
   If(Term condition, Term then, Term otherwise)
       : Node(IfKind), condition(std::move(condition)), then(std::move(then)),
         otherwise(std::move(otherwise)) {}
   ~If() override = default;
-};
+} __attribute__((aligned(32)));
 
 struct Print : public Node {
-  Term value;
-  Print(Term value) : Node(PrintKind), value(std::move(value)) {}
+  Term value{};
+  explicit Print(Term value) : Node(PrintKind), value(std::move(value)) {}
   ~Print() override = default;
 };
 
 struct First : public Node {
-  Term value;
-  First(Term value) : Node(FirstKind), value(std::move(value)) {}
+  Term value{};
+  explicit First(Term value) : Node(FirstKind), value(std::move(value)) {}
   ~First() override = default;
 };
 
 struct Second : public Node {
-  Term value;
-  Second(Term value) : Node(SecondKind), value(std::move(value)) {}
+  Term value{};
+  explicit Second(Term value) : Node(SecondKind), value(std::move(value)) {}
   ~Second() override = default;
 };
 

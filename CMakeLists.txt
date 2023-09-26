@@ -16,8 +16,8 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     "Debug" "Release" "MinSizeRel" "RelWithDebInfo" "Sanitizer")
 endif()
 
-set(ESBMC_CXX_Clang_DEFAULTS -Wall -Wextra -pipe -pedantic)
-set(ESBMC_CXX_GNU_DEFAULTS -Wall -Wextra -pipe -pedantic)
+set(ESBMC_CXX_Clang_DEFAULTS -Wall -Wextra -pipe -pedantic -fno-rtti -fno-exceptions)
+set(ESBMC_CXX_GNU_DEFAULTS -Wall -Wextra -pipe -pedantic -fno-rtti -fno-exceptions)
 add_compile_options(${ESBMC_CXX_${CMAKE_CXX_COMPILER_ID}_DEFAULTS})
 
 add_executable(cpp-rinher-compiler

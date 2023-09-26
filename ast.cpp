@@ -1,14 +1,9 @@
-#include "ast.h"
-#include "term.h"
-#include "utils.h"
-
-#include <bits/fs_fwd.h>
 #include <fstream>
 #include <iostream>
-#include <memory>
-#include <stdexcept>
-#include <string>
 #include <unordered_map>
+
+#include "ast.h"
+#include "utils.h"
 
 namespace {
 
@@ -33,23 +28,55 @@ std::unordered_map<std::string, Ast::BinaryOp> binaryOpLookupTable = {
     {"Gt", Ast::Gt},   {"Lte", Ast::Lte}, {"Gte", Ast::Gte}, {"And", Ast::And},
     {"Or", Ast::Or}};
 
-Ast::BinaryOp createBinaryOpFromJson(const Json::Value &json) {
+std::string getOpString(Ast::BinaryOp op) {
+  switch (op) {
+  case Ast::Add:
+    return "add";
+  case Ast::Sub:
+    return "sub";
+  case Ast::Mul:
+    return "mul";
+  case Ast::Div:
+    return "Div";
+  case Ast::Rem:
+    return "rem";
+  case Ast::Eq:
+    return "eq";
+  case Ast::Neq:
+    return "Not eq";
+  case Ast::Lt:
+    return "<";
+  case Ast::Gt:
+    return ">";
+  case Ast::Lte:
+    return "<=";
+  case Ast::Gte:
+    return ">=";
+  case Ast::And:
+    return "&";
+  case Ast::Or:
+    return "|";
+  }
+  return "";
+}
+
+auto createBinaryOpFromJson(const Json::Value &json) -> Ast::BinaryOp {
   return binaryOpLookupTable[json.asString()];
 }
 
-Ast::Parameter createParameterFromJson(const Json::Value &json) {
+auto createParameterFromJson(const Json::Value &json) -> Ast::Parameter {
   has_properties_or_abort(json, "text");
   return {json["text"].asString()};
 }
 
-std::unique_ptr<Ast::Node> createTermFromJson(const Json::Value &json) {
+auto createTermFromJson(const Json::Value &json) -> std::unique_ptr<Ast::Node> {
   has_properties_or_abort(json, "kind", "location");
 
-  std::string kind = json["kind"].asString();
-  if (!termLookupTable.count(kind))
+  const std::string &kind = json["kind"].asString();
+  if (termLookupTable.count(kind) == 0U)
     ABORT("Term kind not recognized");
 
-  Ast::Kind termKind = termLookupTable.find(kind)->second;
+  Ast::Kind const termKind = termLookupTable.find(kind)->second;
 
   switch (termKind) {
   case Ast::IntKind:
@@ -64,8 +91,9 @@ std::unique_ptr<Ast::Node> createTermFromJson(const Json::Value &json) {
     has_properties_or_abort(json, "arguments", "callee");
 
     std::vector<std::unique_ptr<Ast::Node>> argVec;
-    for (const Json::Value &js : json["arguments"])
+    for (const Json::Value &js : json["arguments"]) {
       argVec.push_back(createTermFromJson(js));
+    }
 
     return std::make_unique<Ast::Call>(createTermFromJson(json["callee"]),
                                        std::move(argVec));
@@ -82,10 +110,8 @@ std::unique_ptr<Ast::Node> createTermFromJson(const Json::Value &json) {
     has_properties_or_abort(json, "parameters", "value", "location");
 
     std::vector<Ast::Parameter> paramVec;
-    for (Json::Value js : json["parameters"]) {
-      has_properties_or_abort(json, "text");
-      paramVec.push_back(json["text"].asString());
-    }
+    for (Json::Value const &js : json["parameters"])
+      paramVec.push_back(createParameterFromJson(js["name"]));
 
     return std::make_unique<Ast::Function>(paramVec,
                                            createTermFromJson(json["value"]));
@@ -142,41 +168,10 @@ std::unique_ptr<Ast::Node> createTermFromJson(const Json::Value &json) {
   __builtin_unreachable();
 }
 
-std::string getOpString(Ast::BinaryOp op) {
-  switch (op) {
-  case Ast::Add:
-    return "add";
-  case Ast::Sub:
-    return "sub";
-  case Ast::Mul:
-    return "mul";
-  case Ast::Div:
-    return "Div";
-  case Ast::Rem:
-    return "rem";
-  case Ast::Eq:
-    return "eq";
-  case Ast::Neq:
-    return "Not eq";
-  case Ast::Lt:
-    return "<";
-  case Ast::Gt:
-    return ">";
-  case Ast::Lte:
-    return "<=";
-  case Ast::Gte:
-    return ">=";
-  case Ast::And:
-    return "&";
-  case Ast::Or:
-    return "|";
-  }
-  return "";
-}
-
 std::string getStringValueOfTerm(const Ast::Term &value) {
   std::string response;
   bool first = true;
+
   switch (value->kind) {
   case Ast::IntKind:
     response.append(
@@ -255,7 +250,7 @@ std::string getStringValueOfTerm(const Ast::Term &value) {
 
 } // namespace
 
-int Ast::File::dumpToFile(const std::string &filename) {
+int Ast::File::dumpToFile(const std::string &filename) const {
   std::ofstream file;
   file.open(filename);
 
@@ -267,7 +262,8 @@ int Ast::File::dumpToFile(const std::string &filename) {
   return 0;
 }
 
-std::unique_ptr<Ast::File> Ast::createNodeFromJson(const Json::Value &json) {
+auto Ast::createNodeFromJson(const Json::Value &json)
+    -> std::unique_ptr<Ast::File> {
   has_properties_or_abort(json, "name", "expression", "location");
   return std::make_unique<Ast::File>(json["name"].asString(),
                                      createTermFromJson(json["expression"]));
