@@ -268,12 +268,18 @@ static inline std::string getStringValueOfTerm(const Ast::Term &value,
       function_def.append(") {");
 
       // If the body doesn't start with let, function, or if, it's a return
-      if (f->value->kind != Ast::LetKind && f->value->kind != Ast::IfKind &&
-          f->value->kind != Ast::FunctionKind)
+      bool const must_return = f->value->kind != Ast::LetKind &&
+                               f->value->kind != Ast::IfKind &&
+                               f->value->kind != Ast::FunctionKind;
+      if (must_return)
         function_def.append("return ");
 
-      function_def.append(getStringValueOfTerm(f->value, value, file))
-          .append(";}");
+      function_def.append(getStringValueOfTerm(f->value, value, file));
+
+      if (must_return)
+        function_def.append(";");
+
+      function_def.append("}");
     } else {
       // Anon function: we don't care since it won't ever be executed
       function_def.append("void ").append(name).append("() {};");
@@ -355,8 +361,7 @@ static inline std::string getStringValueOfTerm(const Ast::Term &value,
       auto const &then_str = getStringValueOfTerm(then, value, file);
 
       bool const must_return =
-          !print_as_ternary &&
-          (then->kind != Ast::LetKind && then->kind != Ast::IfKind);
+          !print_as_ternary && (then->kind != Ast::LetKind);
       add_return_if_needed;
       response.append(then_str);
       add_semicolon_if_needed;
@@ -372,8 +377,8 @@ static inline std::string getStringValueOfTerm(const Ast::Term &value,
       auto const &otherwise_str = getStringValueOfTerm(otherwise, value, file);
 
       bool const must_return =
-          !print_as_ternary &&
-          (otherwise->kind != Ast::LetKind && otherwise->kind != Ast::IfKind);
+          !print_as_ternary && (otherwise->kind != Ast::LetKind);
+
       add_return_if_needed;
       response.append(otherwise_str);
       add_semicolon_if_needed;
@@ -408,6 +413,8 @@ static inline std::string getStringValueOfTerm(const Ast::Term &value,
         .append(")");
     return response;
   }
+
+  case Ast::ProgramKind:;
   }
 
   ABORT(std::string("Missing support for term ")
