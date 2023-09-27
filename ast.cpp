@@ -209,47 +209,66 @@ static inline std::string getStringValueOfTerm(const Ast::Term &value,
   case Ast::TupleKind: {
     SetForScope(scope, scope | TUPLE);
 
-    return response.append("(")
-        .append(getStringValueOfTerm(
-            static_cast<Ast::Tuple *>(value.get())->first, value, file, scope))
+    auto const &first_str = getStringValueOfTerm(
+        static_cast<Ast::Tuple *>(value.get())->first, value, file, scope);
+    auto const &second_str = getStringValueOfTerm(
+        static_cast<Ast::Tuple *>(value.get())->second, value, file, scope);
+
+    return response.append("__tuple<")
+        .append("decltype(")
+        .append(first_str)
+        .append(")")
         .append(", ")
-        .append(getStringValueOfTerm(
-            static_cast<Ast::Tuple *>(value.get())->second, value, file, scope))
-        .append(")");
+        .append("decltype(")
+        .append(second_str)
+        .append(")>{")
+        .append(first_str)
+        .append(", ")
+        .append(second_str)
+        .append("}");
   }
 
   case Ast::FunctionKind: {
     SetForScope(scope, scope | FUNCTION);
 
+    static int counter = 0;
+    auto const &name = (parent->kind == Ast::LetKind)
+                           ? static_cast<Ast::Let *>(parent.get())->name
+                           : "__anon_fn_" + (std::to_string(counter++));
+
     std::string function_def;
-    function_def.append("template <");
+    if (parent->kind == Ast::LetKind) {
+      function_def.append("template <");
+      auto const &f = static_cast<Ast::Function *>(value.get());
+      std::size_t numParams = f->parameters.size();
+      for (std::size_t i = 0; i < numParams; i++) {
+        function_def.append("typename T").append(std::to_string(i));
+        if (i < (numParams - 1))
+          function_def.append(", ");
+      }
+      function_def.append(">");
 
-    auto const &f = static_cast<Ast::Function *>(value.get());
-    std::size_t numParams = f->parameters.size();
-    for (std::size_t i = 0; i < numParams; i++) {
-      function_def.append("typename T").append(std::to_string(i));
-      if (i < (numParams - 1))
-        function_def.append(", ");
+      function_def.append("auto ").append(name).append("(");
+      for (std::size_t i = 0; i < numParams; i++) {
+        function_def.append("T")
+            .append(std::to_string(i))
+            .append(" ")
+            .append(f->parameters[i]);
+        if (i < (numParams - 1))
+          function_def.append(", ");
+      }
+      function_def.append(")");
+
+      function_def.append(" {")
+          .append(getStringValueOfTerm(f->value, value, file, scope))
+          .append(";}");
+    } else {
+      // Anon function: we don't care since it won't ever be executed
+      function_def.append("void ").append(name).append("() {};");
     }
-
-    assert(parent->kind == Ast::LetKind);
-    auto const &p = static_cast<Ast::Let *>(parent.get());
-
-    function_def.append("> auto ").append(p->name).append("(");
-    for (std::size_t i = 0; i < numParams; i++) {
-      function_def.append("T")
-          .append(std::to_string(i))
-          .append(" ")
-          .append(f->parameters[i]);
-      if (i < (numParams - 1))
-        function_def.append(", ");
-    }
-    function_def.append(") {")
-        .append(getStringValueOfTerm(f->value, value, file, scope))
-        .append("}");
 
     file << function_def;
-    return "";
+    return name;
   }
 
   case Ast::CallKind: {
@@ -297,9 +316,9 @@ static inline std::string getStringValueOfTerm(const Ast::Term &value,
       response.append("auto ")
           .append(static_cast<Ast::Let *>(value.get())->name)
           .append(" = ")
-          .append(rhs)
-          .append(";\n");
+          .append(rhs);
     }
+    response.append(";\n");
 
     return response.append(getStringValueOfTerm(
         static_cast<Ast::Let *>(value.get())->next, value, file, scope));

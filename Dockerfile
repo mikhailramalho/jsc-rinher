@@ -6,7 +6,8 @@ RUN apt update && \
 
 COPY ast.cpp .
 COPY main.cpp .
-COPY out.cpp .
+COPY out.h .
+COPY generate.h .
 COPY ast.h .
 COPY utils.h .
 COPY CMakeLists.txt .

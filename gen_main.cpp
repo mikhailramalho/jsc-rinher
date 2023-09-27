@@ -20,5 +20,9 @@ int generated_main() {
   std::function<decltype(fib_fn<decltype(46)>)> f = fib_fn<decltype(46)>;
   print(f(46));
   // print(sum(46));
+  auto tuple = __tuple<decltype(1), decltype(2)>{
+    print(1), print(2)
+  };
+
   return 0;
 }
