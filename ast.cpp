@@ -319,8 +319,8 @@ static inline std::string getStringValueOfTerm(const Ast::Term &value,
     auto const &body = getStringValueOfTerm(next, parent, file);
 
     {
-      bool must_return =
-          (next->kind != Ast::LetKind && next->kind != Ast::IfKind && parent != nullptr);
+      bool must_return = (next->kind != Ast::LetKind &&
+                          next->kind != Ast::IfKind && parent != nullptr);
       add_return_if_needed;
       response.append(body);
       add_semicolon_if_needed;
@@ -330,33 +330,48 @@ static inline std::string getStringValueOfTerm(const Ast::Term &value,
   }
 
   case Ast::IfKind: {
-    response.append("if (").append(getStringValueOfTerm(
-        static_cast<Ast::If *>(value.get())->condition, value, file)).append(") {\n");
+    auto const &cond = getStringValueOfTerm(
+        static_cast<Ast::If *>(value.get())->condition, value, file);
+
+    bool print_as_ternary =
+        !((parent == nullptr) || (parent->kind == Ast::FunctionKind));
+    if (print_as_ternary)
+      response.append(cond).append(" ? ");
+    else
+      response.append("if (").append(cond).append(") {\n");
 
     {
       auto const &then = static_cast<Ast::If *>(value.get())->then;
       auto const &then_str = getStringValueOfTerm(then, value, file);
 
-      bool must_return = (then->kind != Ast::LetKind && then->kind != Ast::IfKind);
+      bool must_return = !print_as_ternary && (then->kind != Ast::LetKind &&
+                                               then->kind != Ast::IfKind);
       add_return_if_needed;
       response.append(then_str);
       add_semicolon_if_needed;
     }
 
-    response.append("}\nelse {\n");
+    if (print_as_ternary)
+      response.append(" : ");
+    else
+      response.append(" } else {");
 
     {
       auto const &otherwise = static_cast<Ast::If *>(value.get())->otherwise;
       auto const &otherwise_str = getStringValueOfTerm(otherwise, value, file);
 
       bool must_return =
+          !print_as_ternary &&
           (otherwise->kind != Ast::LetKind && otherwise->kind != Ast::IfKind);
       add_return_if_needed;
       response.append(otherwise_str);
       add_semicolon_if_needed;
     }
 
-    return response.append("}");
+    if (!print_as_ternary)
+      response.append("}");
+
+    return response;
   }
 
   case Ast::PrintKind: {
@@ -382,7 +397,6 @@ static inline std::string getStringValueOfTerm(const Ast::Term &value,
         .append(")");
     return response;
   }
-
   }
 
   ABORT(std::string("Missing support for term ")
