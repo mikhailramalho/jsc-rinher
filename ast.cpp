@@ -234,17 +234,24 @@ static inline std::string getStringValueOfTerm(const Ast::Term &value,
                            ? static_cast<Ast::Let *>(parent.get())->name
                            : "__anon_fn_" + (std::to_string(anon_counter++));
 
+    // We only care about functions that are either set to a variable or that
+    // are immediately called
+    bool generate_def =
+        (parent->kind == Ast::LetKind) || (parent->kind == Ast::CallKind);
+
     std::string function_def;
-    if (parent->kind == Ast::LetKind) {
-      function_def.append("template <");
+    if (generate_def) {
       auto const &f = static_cast<Ast::Function *>(value.get());
       std::size_t numParams = f->parameters.size();
-      for (std::size_t i = 0; i < numParams; i++) {
-        function_def.append("typename T").append(std::to_string(i));
-        if (i < (numParams - 1))
-          function_def.append(", ");
+      if (numParams) {
+        function_def.append("template <");
+        for (std::size_t i = 0; i < numParams; i++) {
+          function_def.append("typename T").append(std::to_string(i));
+          if (i < (numParams - 1))
+            function_def.append(", ");
+        }
+        function_def.append(">");
       }
-      function_def.append(">");
 
       function_def.append("auto ").append(name).append("(");
       for (std::size_t i = 0; i < numParams; i++) {
@@ -270,7 +277,7 @@ static inline std::string getStringValueOfTerm(const Ast::Term &value,
     }
 
     file << function_def;
-    return (parent->kind == Ast::LetKind) ? "" : name;
+    return generate_def ? "" : name;
   }
 
   case Ast::CallKind: {
