@@ -177,6 +177,8 @@ std::unique_ptr<Ast::Node> createTermFromJson(const Json::Value &json) {
   __builtin_unreachable();
 }
 
+static int anon_counter = 0;
+
 static inline std::string getStringValueOfTerm(const Ast::Term &value,
                                                const Ast::Term &parent,
                                                std::ofstream &file) {
@@ -228,10 +230,9 @@ static inline std::string getStringValueOfTerm(const Ast::Term &value,
   }
 
   case Ast::FunctionKind: {
-    static int counter = 0;
     auto const &name = (parent->kind == Ast::LetKind)
                            ? static_cast<Ast::Let *>(parent.get())->name
-                           : "__anon_fn_" + (std::to_string(counter++));
+                           : "__anon_fn_" + (std::to_string(anon_counter++));
 
     std::string function_def;
     if (parent->kind == Ast::LetKind) {
@@ -307,12 +308,11 @@ static inline std::string getStringValueOfTerm(const Ast::Term &value,
 
     // Special case functions
     auto const &v = static_cast<Ast::Let *>(value.get())->value;
+    auto const &name = static_cast<Ast::Let *>(value.get())->name;
     if (v->kind != Ast::FunctionKind) {
-      response.append("auto ")
-          .append(static_cast<Ast::Let *>(value.get())->name)
-          .append(" = ")
-          .append(rhs)
-          .append(";\n");
+      if (name != "_")
+        response.append("auto ").append(name).append(" = ");
+      response.append(rhs).append(";\n");
     }
 
     auto const &next = static_cast<Ast::Let *>(value.get())->next;
@@ -326,14 +326,6 @@ static inline std::string getStringValueOfTerm(const Ast::Term &value,
       add_semicolon_if_needed;
     }
 
-    return response;
-  }
-
-  case Ast::PrintKind: {
-    response.append("print(")
-        .append(getStringValueOfTerm(
-            static_cast<Ast::Print *>(value.get())->value, value, file))
-        .append(")");
     return response;
   }
 
@@ -366,6 +358,31 @@ static inline std::string getStringValueOfTerm(const Ast::Term &value,
 
     return response.append("}");
   }
+
+  case Ast::PrintKind: {
+    response.append("print(")
+        .append(getStringValueOfTerm(
+            static_cast<Ast::Print *>(value.get())->value, value, file))
+        .append(")");
+    return response;
+  }
+
+  case Ast::FirstKind: {
+    response.append("__first(")
+        .append(getStringValueOfTerm(
+            static_cast<Ast::Print *>(value.get())->value, value, file))
+        .append(")");
+    return response;
+  }
+
+  case Ast::SecondKind: {
+    response.append("__second(")
+        .append(getStringValueOfTerm(
+            static_cast<Ast::Print *>(value.get())->value, value, file))
+        .append(")");
+    return response;
+  }
+
   }
 
   ABORT(std::string("Missing support for term ")

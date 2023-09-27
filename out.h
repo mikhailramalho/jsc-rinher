@@ -49,6 +49,17 @@ struct __tuple<T0, T1> print(struct __tuple<T0, T1> arg) {
   return arg;
 }
 
+template <typename T0, typename T1>
+T0 __first(struct __tuple<T0, T1> arg) {
+  return arg.first;
+}
+
+template <typename T0, typename T1>
+T1 __second(struct __tuple<T0, T1> arg) {
+  return arg.second;
+}
+
+
 static inline int
 __add_impl(int a, int b) {
   return a + b;
