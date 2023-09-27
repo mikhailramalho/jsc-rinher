@@ -10,7 +10,8 @@ COPY out.cpp .
 COPY ast.h .
 COPY utils.h .
 COPY CMakeLists.txt .
-COPY --chmod=0755 run.sh .
+COPY run.sh .
+RUN chmod +755 ./run.sh
 
 RUN cmake -DCMAKE_BUILD_TYPE=Release .. && cmake --build .
 
