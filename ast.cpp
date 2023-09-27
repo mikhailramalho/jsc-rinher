@@ -1,7 +1,6 @@
 #include <algorithm>
 #include <fstream>
 #include <iostream>
-#include <execution>
 #include <jsoncpp/json/reader.h>
 #include <jsoncpp/json/value.h>
 #include <unordered_map>
@@ -98,9 +97,9 @@ std::unique_ptr<Ast::Node> createTermFromJson(const Json::Value &json) {
     std::vector<std::unique_ptr<Ast::Node>> args;
     args.reserve(jsonArgs.size());
 
-    std::for_each(
-        std::execution::par, jsonArgs.begin(), jsonArgs.end(),
-        [&](auto &&item) { args.push_back(createTermFromJson(item)); });
+    std::for_each(jsonArgs.begin(), jsonArgs.end(), [&](auto &&item) {
+      args.push_back(createTermFromJson(item));
+    });
 
     return std::make_unique<Ast::Call>(createTermFromJson(json["callee"]),
                                        std::move(args));
@@ -119,9 +118,9 @@ std::unique_ptr<Ast::Node> createTermFromJson(const Json::Value &json) {
     std::vector<Ast::Parameter> params;
     params.reserve(jsonParams.size());
 
-    std::for_each(
-        std::execution::par, jsonParams.begin(), jsonParams.end(),
-        [&](auto &&item) { params.push_back(createParameterFromJson(item)); });
+    std::for_each(jsonParams.begin(), jsonParams.end(), [&](auto &&item) {
+      params.push_back(createParameterFromJson(item));
+    });
 
     return std::make_unique<Ast::Function>(params,
                                            createTermFromJson(json["value"]));
