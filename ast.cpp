@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cassert>
 #include <fstream>
 #include <iostream>
 #include <jsoncpp/json/reader.h>
@@ -34,31 +35,31 @@ std::unordered_map<std::string, Ast::BinaryOp> binaryOpLookupTable = {
 std::string getOpString(Ast::BinaryOp op) {
   switch (op) {
   case Ast::Add:
-    return "add";
+    return "__add";
   case Ast::Sub:
-    return "sub";
+    return "__sub";
   case Ast::Mul:
-    return "mul";
+    return "__mul";
   case Ast::Div:
-    return "Div";
+    return "__div";
   case Ast::Rem:
-    return "rem";
+    return "__rem";
   case Ast::Eq:
-    return "eq";
+    return "__eq";
   case Ast::Neq:
-    return "Not eq";
+    return "__noteq";
   case Ast::Lt:
-    return "<";
+    return "__lt";
   case Ast::Gt:
-    return ">";
+    return "__gt";
   case Ast::Lte:
-    return "<=";
+    return "__lte";
   case Ast::Gte:
-    return ">=";
+    return "__gte";
   case Ast::And:
-    return "&&";
+    return "__and";
   case Ast::Or:
-    return "||";
+    return "__or";
   }
   __builtin_unreachable();
 }
@@ -162,21 +163,33 @@ std::unique_ptr<Ast::Node> createTermFromJson(const Json::Value &json) {
   case Ast::VarKind:
     has_properties_or_abort(json, "text");
     return std::make_unique<Ast::Var>(json["text"].asString());
-
-  default:
-    ABORT(std::string("Term ill-formed on ")
-              .append(json["location"]["file"].asString())
-              .append("(")
-              .append(std::to_string(json["location"]["start"].asInt()))
-              .append(", ")
-              .append(std::to_string(json["location"]["end"].asInt()))
-              .append(")"));
   }
 
+  ABORT(std::string("Term ill-formed on ")
+            .append(json["location"]["file"].asString())
+            .append("(")
+            .append(std::to_string(json["location"]["start"].asInt()))
+            .append(", ")
+            .append(std::to_string(json["location"]["end"].asInt()))
+            .append(")"));
   __builtin_unreachable();
 }
 
-std::string getStringValueOfTerm(const Ast::Term &value) {
+enum Scope : int {
+  PROGRAM = 1,
+  FUNCTION = 1 << 1,
+  LET = 1 << 2,
+  IFCOND = 1 << 3,
+  IFBODY = 1 << 4,
+  CALL = 1 << 5,
+  BINARY = 1 << 6,
+  TUPLE = 1 << 7,
+};
+
+static inline std::string getStringValueOfTerm(const Ast::Term &value,
+                                               const Ast::Term &parent,
+                                               std::ofstream &file,
+                                               Scope scope) {
   std::string response;
 
   switch (value->kind) {
@@ -193,59 +206,139 @@ std::string getStringValueOfTerm(const Ast::Term &value) {
         .append(static_cast<Ast::Str *>(value.get())->value)
         .append("\"");
 
-  case Ast::TupleKind:
+  case Ast::TupleKind: {
+    SetForScope(scope, scope | TUPLE);
+
     return response.append("(")
-        .append(
-            getStringValueOfTerm(static_cast<Ast::Tuple *>(value.get())->first))
+        .append(getStringValueOfTerm(
+            static_cast<Ast::Tuple *>(value.get())->first, value, file, scope))
         .append(", ")
         .append(getStringValueOfTerm(
-            static_cast<Ast::Tuple *>(value.get())->second))
+            static_cast<Ast::Tuple *>(value.get())->second, value, file, scope))
         .append(")");
+  }
 
   case Ast::FunctionKind: {
-    response.append("<#");
-    bool first = true;
-    for (const auto &param :
-         static_cast<Ast::Function *>(value.get())->parameters) {
-      if (!first)
-        response.append(", ");
-      first = false;
-      response.append(param);
+    SetForScope(scope, scope | FUNCTION);
+
+    std::string function_def;
+    function_def.append("template <");
+
+    auto const &f = static_cast<Ast::Function *>(value.get());
+    std::size_t numParams = f->parameters.size();
+    for (std::size_t i = 0; i < numParams; i++) {
+      function_def.append("typename T").append(std::to_string(i));
+      if (i < (numParams - 1))
+        function_def.append(", ");
     }
-    return response.append(">\n");
+
+    assert(parent->kind == Ast::LetKind);
+    auto const &p = static_cast<Ast::Let *>(parent.get());
+
+    function_def.append("> auto ").append(p->name).append("(");
+    for (std::size_t i = 0; i < numParams; i++) {
+      function_def.append("T")
+          .append(std::to_string(i))
+          .append(" ")
+          .append(f->parameters[i]);
+      if (i < (numParams - 1))
+        function_def.append(", ");
+    }
+    function_def.append(") {")
+        .append(getStringValueOfTerm(f->value, value, file, scope))
+        .append("}");
+
+    file << function_def;
+    return "";
   }
 
-  case Ast::CallKind:
-    return response.append(
-        "Call(" +
-        getStringValueOfTerm(static_cast<Ast::Call *>(value.get())->callee) +
-        ")\n");
+  case Ast::CallKind: {
+    SetForScope(scope, scope | CALL);
 
-  case Ast::BinaryKind:
+    response
+        .append(getStringValueOfTerm(
+            static_cast<Ast::Call *>(value.get())->callee, value, file, scope))
+        .append("(");
+
+    auto const &c = static_cast<Ast::Call *>(value.get());
+    std::size_t numParams = c->arguments.size();
+    for (std::size_t i = 0; i < numParams; i++) {
+      response.append(
+          getStringValueOfTerm(c->arguments[i], value, file, scope));
+      if (i < (numParams - 1))
+        response.append(", ");
+    }
+    return response.append(")");
+  }
+
+  case Ast::BinaryKind: {
+    SetForScope(scope, scope | BINARY);
+
     return response
-        .append(
-            getStringValueOfTerm(static_cast<Ast::Binary *>(value.get())->lhs))
         .append(getOpString(static_cast<Ast::Binary *>(value.get())->op))
-        .append(
-            getStringValueOfTerm(static_cast<Ast::Binary *>(value.get())->rhs))
-        .append("\n");
-
-  case Ast::LetKind:
-    return response.append("auto ")
-        .append(static_cast<Ast::Let *>(value.get())->name)
-        .append(" = ")
-        .append(
-            getStringValueOfTerm(static_cast<Ast::Let *>(value.get())->value))
-        .append(";\n")
-        .append(
-            getStringValueOfTerm(static_cast<Ast::Let *>(value.get())->next));
-
-  case Ast::PrintKind:
-    return response.append("print(")
-        .append(
-            getStringValueOfTerm(static_cast<Ast::Print *>(value.get())->value))
+        .append("(")
+        .append(getStringValueOfTerm(
+            static_cast<Ast::Binary *>(value.get())->lhs, value, file, scope))
+        .append(", ")
+        .append(getStringValueOfTerm(
+            static_cast<Ast::Binary *>(value.get())->rhs, value, file, scope))
         .append(")");
   }
+
+  case Ast::LetKind: {
+    SetForScope(scope, scope | LET);
+
+    auto rhs = getStringValueOfTerm(static_cast<Ast::Let *>(value.get())->value,
+                                    value, file, scope);
+
+    // Special case functions
+    auto const &v = static_cast<Ast::Let *>(value.get())->value;
+    if (v->kind != Ast::FunctionKind) {
+      response.append("auto ")
+          .append(static_cast<Ast::Let *>(value.get())->name)
+          .append(" = ")
+          .append(rhs)
+          .append(";\n");
+    }
+
+    return response.append(getStringValueOfTerm(
+        static_cast<Ast::Let *>(value.get())->next, value, file, scope));
+  }
+
+  case Ast::PrintKind: {
+    SetForScope(scope, scope | CALL);
+
+    return response.append("print(")
+        .append(getStringValueOfTerm(
+            static_cast<Ast::Print *>(value.get())->value, value, file, scope))
+        .append(")");
+  }
+
+  case Ast::IfKind: {
+    {
+      SetForScope(scope, scope | IFCOND);
+      response.append("if (").append(getStringValueOfTerm(
+          static_cast<Ast::If *>(value.get())->condition, value, file, scope));
+    }
+    {
+      SetForScope(scope, scope | IFBODY);
+      return response.append(") { return \n")
+          .append(getStringValueOfTerm(
+              static_cast<Ast::If *>(value.get())->then, value, file, scope))
+          .append(";}\nelse {return \n")
+          .append(getStringValueOfTerm(
+              static_cast<Ast::If *>(value.get())->otherwise, value, file,
+              scope))
+          .append(";}");
+    }
+  }
+
+  case Ast::VarKind:
+    return response.append(static_cast<Ast::Var *>(value.get())->text);
+  }
+
+  ABORT(std::string("Missing support for term ")
+            .append(std::to_string(value->kind)));
   __builtin_unreachable();
 }
 
@@ -263,9 +356,12 @@ int generateFromJson(const char *pathToJson) {
 
   std::ofstream file;
   file.open("generated_main.cpp");
+  file << "#include \"out.h\"\n\n";
 
-  file << "int gen_main() {\n";
-  file << getStringValueOfTerm(ast) << ";\n";
+  auto main_body = getStringValueOfTerm(ast, nullptr, file, PROGRAM);
+
+  file << "int main() {\n";
+  file << main_body << ";\n";
   file << "return 0;\n";
   file << "}\n";
   file.close();
