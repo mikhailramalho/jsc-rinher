@@ -1,10 +1,13 @@
 #include <algorithm>
 #include <cassert>
 #include <fstream>
-#include <iostream>
 #include <jsoncpp/json/reader.h>
 #include <jsoncpp/json/value.h>
 #include <unordered_map>
+
+#ifndef NDEBUG
+#include <iostream>
+#endif
 
 #include "ast.h"
 #include "utils.h"
