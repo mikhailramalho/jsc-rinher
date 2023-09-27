@@ -178,37 +178,33 @@ std::unique_ptr<Ast::Node> createTermFromJson(const Json::Value &json) {
 
 std::string getStringValueOfTerm(const Ast::Term &value) {
   std::string response;
-  bool first = true;
 
   switch (value->kind) {
   case Ast::IntKind:
-    response.append(
+    return response.append(
         std::to_string(static_cast<Ast::Int *>(value.get())->value));
-    break;
 
   case Ast::BoolKind:
-    response.append(static_cast<Ast::Bool *>(value.get())->value ? "true"
-                                                                 : "false");
-    break;
+    return response.append(
+        static_cast<Ast::Bool *>(value.get())->value ? "true" : "false");
 
   case Ast::StrKind:
-    response.append("\"")
+    return response.append("\"")
         .append(static_cast<Ast::Str *>(value.get())->value)
         .append("\"");
-    break;
 
   case Ast::TupleKind:
-    response.append("(")
+    return response.append("(")
         .append(
             getStringValueOfTerm(static_cast<Ast::Tuple *>(value.get())->first))
         .append(", ")
         .append(getStringValueOfTerm(
             static_cast<Ast::Tuple *>(value.get())->second))
         .append(")");
-    break;
 
-  case Ast::FunctionKind:
+  case Ast::FunctionKind: {
     response.append("<#");
+    bool first = true;
     for (const auto &param :
          static_cast<Ast::Function *>(value.get())->parameters) {
       if (!first)
@@ -216,28 +212,26 @@ std::string getStringValueOfTerm(const Ast::Term &value) {
       first = false;
       response.append(param);
     }
-    response.append(">\n");
-    break;
+    return response.append(">\n");
+  }
 
   case Ast::CallKind:
-    response.append(
+    return response.append(
         "Call(" +
         getStringValueOfTerm(static_cast<Ast::Call *>(value.get())->callee) +
         ")\n");
-    break;
 
   case Ast::BinaryKind:
-    response
+    return response
         .append(
             getStringValueOfTerm(static_cast<Ast::Binary *>(value.get())->lhs))
         .append(getOpString(static_cast<Ast::Binary *>(value.get())->op))
         .append(
             getStringValueOfTerm(static_cast<Ast::Binary *>(value.get())->rhs))
         .append("\n");
-    break;
 
   case Ast::LetKind:
-    response.append("auto ")
+    return response.append("auto ")
         .append(static_cast<Ast::Let *>(value.get())->name)
         .append(" = ")
         .append(
@@ -245,15 +239,14 @@ std::string getStringValueOfTerm(const Ast::Term &value) {
         .append(";\n")
         .append(
             getStringValueOfTerm(static_cast<Ast::Let *>(value.get())->next));
-    break;
 
   case Ast::PrintKind:
-    response.append("print(")
+    return response.append("print(")
         .append(
             getStringValueOfTerm(static_cast<Ast::Print *>(value.get())->value))
         .append(")");
   }
-  return response;
+  __builtin_unreachable();
 }
 
 } // namespace
