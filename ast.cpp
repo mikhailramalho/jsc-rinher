@@ -181,40 +181,23 @@ static inline std::string getStringValueOfTerm(const Ast::Term &value,
                                                const Ast::Term &parent,
                                                std::ofstream &file) {
   std::string response;
-
-  bool must_return = false;
-  // if (parent) {
-  //   const auto p_kind = parent->kind;
-  //   must_return = p_kind == Ast::FunctionKind ||
-  //       (p_kind == Ast::IfKind &&
-  //        value != static_cast<Ast::If *>(parent.get())->condition) ||
-  //       (p_kind == Ast::LetKind &&
-  //        value == static_cast<Ast::Let *>(parent.get())->next);
-  // }
-
   switch (value->kind) {
   case Ast::IntKind: {
-    add_return_if_needed;
     response.append(
         std::to_string(static_cast<Ast::Int *>(value.get())->value));
-    add_semicolon_if_needed;
     return response;
   }
 
   case Ast::BoolKind: {
-    add_return_if_needed;
     response.append(static_cast<Ast::Bool *>(value.get())->value ? "true"
                                                                  : "false");
-    add_semicolon_if_needed;
     return response;
   }
 
   case Ast::StrKind: {
-    add_return_if_needed;
     response.append("\"")
         .append(static_cast<Ast::Str *>(value.get())->value)
         .append("\"");
-    add_semicolon_if_needed;
     return response;
   }
 
@@ -224,7 +207,6 @@ static inline std::string getStringValueOfTerm(const Ast::Term &value,
     auto const &second_str = getStringValueOfTerm(
         static_cast<Ast::Tuple *>(value.get())->second, value, file);
 
-    add_return_if_needed;
     response.append("__tuple<")
         .append("decltype(")
         .append(first_str)
@@ -237,14 +219,11 @@ static inline std::string getStringValueOfTerm(const Ast::Term &value,
         .append(", ")
         .append(second_str)
         .append("}");
-    add_semicolon_if_needed;
     return response;
   }
 
   case Ast::VarKind: {
-    add_return_if_needed;
     response.append(static_cast<Ast::Var *>(value.get())->text);
-    add_semicolon_if_needed;
     return response;
   }
 
@@ -294,8 +273,6 @@ static inline std::string getStringValueOfTerm(const Ast::Term &value,
   }
 
   case Ast::CallKind: {
-    add_return_if_needed;
-
     response
         .append(getStringValueOfTerm(
             static_cast<Ast::Call *>(value.get())->callee, value, file))
@@ -309,12 +286,10 @@ static inline std::string getStringValueOfTerm(const Ast::Term &value,
         response.append(", ");
     }
 
-    add_semicolon_if_needed;
     return response.append(")");
   }
 
   case Ast::BinaryKind: {
-    add_return_if_needed;
     response.append(getOpString(static_cast<Ast::Binary *>(value.get())->op))
         .append("(")
         .append(getStringValueOfTerm(
@@ -323,7 +298,6 @@ static inline std::string getStringValueOfTerm(const Ast::Term &value,
         .append(getStringValueOfTerm(
             static_cast<Ast::Binary *>(value.get())->rhs, value, file))
         .append(")");
-    add_semicolon_if_needed;
     return response;
   }
 
@@ -344,7 +318,7 @@ static inline std::string getStringValueOfTerm(const Ast::Term &value,
     auto const &body = getStringValueOfTerm(
         static_cast<Ast::Let *>(value.get())->next, value, file);
 
-    must_return = (static_cast<Ast::Let *>(value.get())->next->kind != Ast::LetKind);
+    bool must_return = (static_cast<Ast::Let *>(value.get())->next->kind != Ast::LetKind);
     add_return_if_needed;
     response.append(body);
     add_semicolon_if_needed;
@@ -353,12 +327,10 @@ static inline std::string getStringValueOfTerm(const Ast::Term &value,
   }
 
   case Ast::PrintKind: {
-    add_return_if_needed;
     response.append("print(")
         .append(getStringValueOfTerm(
             static_cast<Ast::Print *>(value.get())->value, value, file))
         .append(")");
-    add_semicolon_if_needed;
     return response;
   }
 
@@ -369,7 +341,7 @@ static inline std::string getStringValueOfTerm(const Ast::Term &value,
     auto const &then = static_cast<Ast::If *>(value.get())->then;
     auto const &then_str = getStringValueOfTerm(then, value, file);
 
-    must_return = (then->kind != Ast::LetKind);
+    bool must_return = (then->kind != Ast::LetKind);
     add_return_if_needed;
     response.append(then_str);
     add_semicolon_if_needed;
