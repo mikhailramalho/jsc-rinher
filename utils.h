@@ -1,13 +1,8 @@
 #pragma once
 
-#include <cstdlib>
-#include <iostream>
-#include <jsoncpp/json/value.h>
-#include <utility>
-
 #define ABORT(msg)                                                             \
   do {                                                                         \
-    std::cout << msg << '\n';                                                  \
+    std::cout << msg << '\n';                                                \
     std::cout << std::flush;                                                   \
     abort();                                                                   \
   } while (0)

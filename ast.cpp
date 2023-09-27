@@ -77,7 +77,7 @@ std::unique_ptr<Ast::Node> createTermFromJson(const Json::Value &json) {
   has_properties_or_abort(json, "kind", "location");
 
   const std::string &kind = json["kind"].asString();
-  if (termLookupTable.count(kind) == 0U)
+  if (!termLookupTable.contains(kind))
     ABORT("Term kind not recognized");
 
   Ast::Kind const termKind = termLookupTable.find(kind)->second;
@@ -177,7 +177,7 @@ std::unique_ptr<Ast::Node> createTermFromJson(const Json::Value &json) {
   __builtin_unreachable();
 }
 
-static int anon_counter = 0;
+int anon_counter = 0;
 
 static inline std::string getStringValueOfTerm(const Ast::Term &value,
                                                const Ast::Term &parent,
@@ -236,13 +236,13 @@ static inline std::string getStringValueOfTerm(const Ast::Term &value,
 
     // We only care about functions that are either set to a variable or that
     // are immediately called
-    bool generate_def =
+    bool const generate_def =
         (parent->kind == Ast::LetKind) || (parent->kind == Ast::CallKind);
 
     std::string function_def;
     if (generate_def) {
       auto const &f = static_cast<Ast::Function *>(value.get());
-      std::size_t numParams = f->parameters.size();
+      std::size_t const numParams = f->parameters.size();
       if (numParams) {
         function_def.append("template <");
         for (std::size_t i = 0; i < numParams; i++) {
@@ -287,7 +287,7 @@ static inline std::string getStringValueOfTerm(const Ast::Term &value,
         .append("(");
 
     auto const &c = static_cast<Ast::Call *>(value.get());
-    std::size_t numParams = c->arguments.size();
+    std::size_t const numParams = c->arguments.size();
     for (std::size_t i = 0; i < numParams; i++) {
       response.append(getStringValueOfTerm(c->arguments[i], value, file));
       if (i < (numParams - 1))
@@ -326,8 +326,8 @@ static inline std::string getStringValueOfTerm(const Ast::Term &value,
     auto const &body = getStringValueOfTerm(next, parent, file);
 
     {
-      bool must_return = (next->kind != Ast::LetKind &&
-                          next->kind != Ast::IfKind && parent != nullptr);
+      bool const must_return = (next->kind != Ast::LetKind &&
+                                next->kind != Ast::IfKind && parent != nullptr);
       add_return_if_needed;
       response.append(body);
       add_semicolon_if_needed;
@@ -340,7 +340,7 @@ static inline std::string getStringValueOfTerm(const Ast::Term &value,
     auto const &cond = getStringValueOfTerm(
         static_cast<Ast::If *>(value.get())->condition, value, file);
 
-    bool print_as_ternary =
+    bool const print_as_ternary =
         !((parent == nullptr) || (parent->kind == Ast::FunctionKind));
     if (print_as_ternary)
       response.append(cond).append(" ? ");
@@ -351,8 +351,9 @@ static inline std::string getStringValueOfTerm(const Ast::Term &value,
       auto const &then = static_cast<Ast::If *>(value.get())->then;
       auto const &then_str = getStringValueOfTerm(then, value, file);
 
-      bool must_return = !print_as_ternary && (then->kind != Ast::LetKind &&
-                                               then->kind != Ast::IfKind);
+      bool const must_return =
+          !print_as_ternary &&
+          (then->kind != Ast::LetKind && then->kind != Ast::IfKind);
       add_return_if_needed;
       response.append(then_str);
       add_semicolon_if_needed;
@@ -367,7 +368,7 @@ static inline std::string getStringValueOfTerm(const Ast::Term &value,
       auto const &otherwise = static_cast<Ast::If *>(value.get())->otherwise;
       auto const &otherwise_str = getStringValueOfTerm(otherwise, value, file);
 
-      bool must_return =
+      bool const must_return =
           !print_as_ternary &&
           (otherwise->kind != Ast::LetKind && otherwise->kind != Ast::IfKind);
       add_return_if_needed;
