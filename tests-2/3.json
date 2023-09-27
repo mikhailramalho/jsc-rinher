@@ -1,0 +1,25 @@
+{
+  "name": "3.rinha",
+  "expression": {
+    "kind": "Print",
+    "value": {
+      "kind": "Str",
+      "value": "123",
+      "location": {
+        "start": 6,
+        "end": 11,
+        "filename": "3.rinha"
+      }
+    },
+    "location": {
+      "start": 0,
+      "end": 12,
+      "filename": "3.rinha"
+    }
+  },
+  "location": {
+    "start": 0,
+    "end": 12,
+    "filename": "3.rinha"
+  }
+}

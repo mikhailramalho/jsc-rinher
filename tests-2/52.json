@@ -1,0 +1,223 @@
+{
+    "name": "52.rinha",
+    "expression": {
+        "kind": "Let",
+        "name": {
+            "text": "fib",
+            "location": {
+                "start": 4,
+                "end": 7,
+                "filename": "52.rinha"
+            }
+        },
+        "value": {
+            "kind": "Function",
+            "parameters": [
+                {
+                    "text": "n",
+                    "location": {
+                        "start": 14,
+                        "end": 15,
+                        "filename": "52.rinha"
+                    }
+                }
+            ],
+            "value": {
+                "kind": "If",
+                "condition": {
+                    "kind": "Binary",
+                    "lhs": {
+                        "kind": "Var",
+                        "text": "n",
+                        "location": {
+                            "start": 28,
+                            "end": 29,
+                            "filename": "52.rinha"
+                        }
+                    },
+                    "op": "Lt",
+                    "rhs": {
+                        "kind": "Int",
+                        "value": 2,
+                        "location": {
+                            "start": 32,
+                            "end": 33,
+                            "filename": "52.rinha"
+                        }
+                    },
+                    "location": {
+                        "start": 28,
+                        "end": 33,
+                        "filename": "52.rinha"
+                    }
+                },
+                "then": {
+                    "kind": "Var",
+                    "text": "n",
+                    "location": {
+                        "start": 41,
+                        "end": 42,
+                        "filename": "52.rinha"
+                    }
+                },
+                "otherwise": {
+                    "kind": "Binary",
+                    "lhs": {
+                        "kind": "Call",
+                        "callee": {
+                            "kind": "Var",
+                            "text": "fib",
+                            "location": {
+                                "start": 58,
+                                "end": 61,
+                                "filename": "52.rinha"
+                            }
+                        },
+                        "arguments": [
+                            {
+                                "kind": "Binary",
+                                "lhs": {
+                                    "kind": "Var",
+                                    "text": "n",
+                                    "location": {
+                                        "start": 62,
+                                        "end": 63,
+                                        "filename": "52.rinha"
+                                    }
+                                },
+                                "op": "Sub",
+                                "rhs": {
+                                    "kind": "Int",
+                                    "value": 1,
+                                    "location": {
+                                        "start": 66,
+                                        "end": 67,
+                                        "filename": "52.rinha"
+                                    }
+                                },
+                                "location": {
+                                    "start": 62,
+                                    "end": 67,
+                                    "filename": "52.rinha"
+                                }
+                            }
+                        ],
+                        "location": {
+                            "start": 58,
+                            "end": 68,
+                            "filename": "52.rinha"
+                        }
+                    },
+                    "op": "Add",
+                    "rhs": {
+                        "kind": "Call",
+                        "callee": {
+                            "kind": "Var",
+                            "text": "fib",
+                            "location": {
+                                "start": 71,
+                                "end": 74,
+                                "filename": "52.rinha"
+                            }
+                        },
+                        "arguments": [
+                            {
+                                "kind": "Binary",
+                                "lhs": {
+                                    "kind": "Var",
+                                    "text": "n",
+                                    "location": {
+                                        "start": 75,
+                                        "end": 76,
+                                        "filename": "52.rinha"
+                                    }
+                                },
+                                "op": "Sub",
+                                "rhs": {
+                                    "kind": "Int",
+                                    "value": 2,
+                                    "location": {
+                                        "start": 79,
+                                        "end": 80,
+                                        "filename": "52.rinha"
+                                    }
+                                },
+                                "location": {
+                                    "start": 75,
+                                    "end": 80,
+                                    "filename": "52.rinha"
+                                }
+                            }
+                        ],
+                        "location": {
+                            "start": 71,
+                            "end": 81,
+                            "filename": "52.rinha"
+                        }
+                    },
+                    "location": {
+                        "start": 58,
+                        "end": 81,
+                        "filename": "52.rinha"
+                    }
+                },
+                "location": {
+                    "start": 24,
+                    "end": 85,
+                    "filename": "52.rinha"
+                }
+            },
+            "location": {
+                "start": 10,
+                "end": 87,
+                "filename": "52.rinha"
+            }
+        },
+        "next": {
+            "kind": "Print",
+            "value": {
+                "kind": "Call",
+                "callee": {
+                    "kind": "Var",
+                    "text": "fib",
+                    "location": {
+                        "start": 95,
+                        "end": 98,
+                        "filename": "52.rinha"
+                    }
+                },
+                "arguments": [
+                    {
+                        "kind": "Int",
+                        "value": 35,
+                        "location": {
+                            "start": 99,
+                            "end": 104,
+                            "filename": "52.rinha"
+                        }
+                    }
+                ],
+                "location": {
+                    "start": 95,
+                    "end": 105,
+                    "filename": "52.rinha"
+                }
+            },
+            "location": {
+                "start": 89,
+                "end": 106,
+                "filename": "52.rinha"
+            }
+        },
+        "location": {
+            "start": 0,
+            "end": 106,
+            "filename": "52.rinha"
+        }
+    },
+    "location": {
+        "start": 0,
+        "end": 106,
+        "filename": "52.rinha"
+    }
+}

@@ -1,0 +1,79 @@
+{
+    "name": "50.rinha",
+    "expression": {
+        "kind": "Print",
+        "value": {
+            "kind": "Binary",
+            "lhs": {
+                "kind": "Int",
+                "value": 2,
+                "location": {
+                    "start": 7,
+                    "end": 8,
+                    "filename": "50.rinha"
+                }
+            },
+            "op": "Add",
+            "rhs": {
+                "kind": "Binary",
+                "lhs": {
+                    "kind": "Int",
+                    "value": 3,
+                    "location": {
+                        "start": 13,
+                        "end": 14,
+                        "filename": "50.rinha"
+                    }
+                },
+                "op": "Sub",
+                "rhs": {
+                    "kind": "Binary",
+                    "lhs": {
+                        "kind": "Int",
+                        "value": 1,
+                        "location": {
+                            "start": 18,
+                            "end": 19,
+                            "filename": "50.rinha"
+                        }
+                    },
+                    "op": "Mul",
+                    "rhs": {
+                        "kind": "Int",
+                        "value": 4,
+                        "location": {
+                            "start": 23,
+                            "end": 24,
+                            "filename": "50.rinha"
+                        }
+                    },
+                    "location": {
+                        "start": 17,
+                        "end": 24,
+                        "filename": "50.rinha"
+                    }
+                },
+                "location": {
+                    "start": 13,
+                    "end": 24,
+                    "filename": "50.rinha"
+                }
+            },
+            "location": {
+                "start": 6,
+                "end": 25,
+                "filename": "50.rinha"
+            }
+        },
+        "location": {
+            "start": 0,
+            "end": 26,
+            "filename": "50.rinha"
+        }
+    },
+    "location": {
+        "start": 0,
+        "end": 26,
+        "filename": "50.rinha"
+    }
+}

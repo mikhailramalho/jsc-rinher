@@ -1,0 +1,43 @@
+{
+  "name": "37.rinha",
+  "expression": {
+    "kind": "Print",
+    "value": {
+      "kind": "Binary",
+      "lhs": {
+        "kind": "Str",
+        "value": "Hello",
+        "location": {
+          "start": 6,
+          "end": 13,
+          "filename": "37.rinha"
+        }
+      },
+      "op": "Add",
+      "rhs": {
+        "kind": "Str",
+        "value": " World!",
+        "location": {
+          "start": 16,
+          "end": 25,
+          "filename": "37.rinha"
+        }
+      },
+      "location": {
+        "start": 6,
+        "end": 25,
+        "filename": "37.rinha"
+      }
+    },
+    "location": {
+      "start": 0,
+      "end": 26,
+      "filename": "37.rinha"
+    }
+  },
+  "location": {
+    "start": 0,
+    "end": 26,
+    "filename": "37.rinha"
+  }
+}

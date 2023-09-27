@@ -1,0 +1,43 @@
+{
+  "name": "29.rinha",
+  "expression": {
+    "kind": "Print",
+    "value": {
+      "kind": "Binary",
+      "lhs": {
+        "kind": "Bool",
+        "value": true,
+        "location": {
+          "start": 6,
+          "end": 10,
+          "filename": "29.rinha"
+        }
+      },
+      "op": "Or",
+      "rhs": {
+        "kind": "Bool",
+        "value": true,
+        "location": {
+          "start": 14,
+          "end": 18,
+          "filename": "29.rinha"
+        }
+      },
+      "location": {
+        "start": 6,
+        "end": 18,
+        "filename": "29.rinha"
+      }
+    },
+    "location": {
+      "start": 0,
+      "end": 19,
+      "filename": "29.rinha"
+    }
+  },
+  "location": {
+    "start": 0,
+    "end": 19,
+    "filename": "29.rinha"
+  }
+}

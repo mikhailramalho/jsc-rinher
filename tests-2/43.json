@@ -1,0 +1,148 @@
+{
+    "name": "43.rinha",
+    "expression": {
+        "kind": "Let",
+        "name": {
+            "text": "minTwo",
+            "location": {
+                "start": 4,
+                "end": 10,
+                "filename": "43.rinha"
+            }
+        },
+        "value": {
+            "kind": "Function",
+            "parameters": [
+                {
+                    "text": "a",
+                    "location": {
+                        "start": 16,
+                        "end": 17,
+                        "filename": "43.rinha"
+                    }
+                },
+                {
+                    "text": "b",
+                    "location": {
+                        "start": 19,
+                        "end": 20,
+                        "filename": "43.rinha"
+                    }
+                }
+            ],
+            "value": {
+                "kind": "If",
+                "condition": {
+                    "kind": "Binary",
+                    "lhs": {
+                        "kind": "Var",
+                        "text": "a",
+                        "location": {
+                            "start": 35,
+                            "end": 36,
+                            "filename": "43.rinha"
+                        }
+                    },
+                    "op": "Lt",
+                    "rhs": {
+                        "kind": "Var",
+                        "text": "b",
+                        "location": {
+                            "start": 39,
+                            "end": 40,
+                            "filename": "43.rinha"
+                        }
+                    },
+                    "location": {
+                        "start": 35,
+                        "end": 40,
+                        "filename": "43.rinha"
+                    }
+                },
+                "then": {
+                    "kind": "Var",
+                    "text": "a",
+                    "location": {
+                        "start": 52,
+                        "end": 53,
+                        "filename": "43.rinha"
+                    }
+                },
+                "otherwise": {
+                    "kind": "Var",
+                    "text": "b",
+                    "location": {
+                        "start": 75,
+                        "end": 76,
+                        "filename": "43.rinha"
+                    }
+                },
+                "location": {
+                    "start": 31,
+                    "end": 82,
+                    "filename": "43.rinha"
+                }
+            },
+            "location": {
+                "start": 13,
+                "end": 84,
+                "filename": "43.rinha"
+            }
+        },
+        "next": {
+            "kind": "Print",
+            "value": {
+                "kind": "Call",
+                "callee": {
+                    "kind": "Var",
+                    "text": "minTwo",
+                    "location": {
+                        "start": 92,
+                        "end": 98,
+                        "filename": "43.rinha"
+                    }
+                },
+                "arguments": [
+                    {
+                        "kind": "Int",
+                        "value": 3,
+                        "location": {
+                            "start": 99,
+                            "end": 100,
+                            "filename": "43.rinha"
+                        }
+                    },
+                    {
+                        "kind": "Int",
+                        "value": 4,
+                        "location": {
+                            "start": 102,
+                            "end": 103,
+                            "filename": "43.rinha"
+                        }
+                    }
+                ],
+                "location": {
+                    "start": 92,
+                    "end": 104,
+                    "filename": "43.rinha"
+                }
+            },
+            "location": {
+                "start": 86,
+                "end": 105,
+                "filename": "43.rinha"
+            }
+        },
+        "location": {
+            "start": 0,
+            "end": 105,
+            "filename": "43.rinha"
+        }
+    },
+    "location": {
+        "start": 0,
+        "end": 105,
+        "filename": "43.rinha"
+    }
+}

@@ -1,0 +1,43 @@
+{
+  "name": "16.rinha",
+  "expression": {
+    "kind": "Print",
+    "value": {
+      "kind": "Binary",
+      "lhs": {
+        "kind": "Int",
+        "value": 1,
+        "location": {
+          "start": 6,
+          "end": 7,
+          "filename": "16.rinha"
+        }
+      },
+      "op": "Gte",
+      "rhs": {
+        "kind": "Int",
+        "value": 0,
+        "location": {
+          "start": 9,
+          "end": 10,
+          "filename": "16.rinha"
+        }
+      },
+      "location": {
+        "start": 6,
+        "end": 10,
+        "filename": "16.rinha"
+      }
+    },
+    "location": {
+      "start": 0,
+      "end": 11,
+      "filename": "16.rinha"
+    }
+  },
+  "location": {
+    "start": 0,
+    "end": 11,
+    "filename": "16.rinha"
+  }
+}

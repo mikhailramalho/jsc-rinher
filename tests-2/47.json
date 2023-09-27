@@ -1,0 +1,129 @@
+{
+    "name": "47.rinha",
+    "expression": {
+        "kind": "Let",
+        "name": {
+            "text": "f",
+            "location": {
+                "start": 4,
+                "end": 5,
+                "filename": "47.rinha"
+            }
+        },
+        "value": {
+            "kind": "Function",
+            "parameters": [
+                {
+                    "text": "x",
+                    "location": {
+                        "start": 12,
+                        "end": 13,
+                        "filename": "47.rinha"
+                    }
+                }
+            ],
+            "value": {
+                "kind": "Print",
+                "value": {
+                    "kind": "Var",
+                    "text": "x",
+                    "location": {
+                        "start": 24,
+                        "end": 25,
+                        "filename": "47.rinha"
+                    }
+                },
+                "location": {
+                    "start": 18,
+                    "end": 26,
+                    "filename": "47.rinha"
+                }
+            },
+            "location": {
+                "start": 8,
+                "end": 26,
+                "filename": "47.rinha"
+            }
+        },
+        "next": {
+            "kind": "Call",
+            "callee": {
+                "kind": "Var",
+                "text": "f",
+                "location": {
+                    "start": 28,
+                    "end": 29,
+                    "filename": "47.rinha"
+                }
+            },
+            "arguments": [
+                {
+                    "kind": "Print",
+                    "value": {
+                        "kind": "Int",
+                        "value": 1,
+                        "location": {
+                            "start": 36,
+                            "end": 37,
+                            "filename": "47.rinha"
+                        }
+                    },
+                    "location": {
+                        "start": 30,
+                        "end": 38,
+                        "filename": "47.rinha"
+                    }
+                },
+                {
+                    "kind": "Print",
+                    "value": {
+                        "kind": "Int",
+                        "value": 2,
+                        "location": {
+                            "start": 46,
+                            "end": 47,
+                            "filename": "47.rinha"
+                        }
+                    },
+                    "location": {
+                        "start": 40,
+                        "end": 48,
+                        "filename": "47.rinha"
+                    }
+                },
+                {
+                    "kind": "Print",
+                    "value": {
+                        "kind": "Int",
+                        "value": 3,
+                        "location": {
+                            "start": 56,
+                            "end": 57,
+                            "filename": "47.rinha"
+                        }
+                    },
+                    "location": {
+                        "start": 50,
+                        "end": 58,
+                        "filename": "47.rinha"
+                    }
+                }
+            ],
+            "location": {
+                "start": 28,
+                "end": 59,
+                "filename": "47.rinha"
+            }
+        },
+        "location": {
+            "start": 0,
+            "end": 59,
+            "filename": "47.rinha"
+        }
+    },
+    "location": {
+        "start": 0,
+        "end": 59,
+        "filename": "47.rinha"
+    }
+}

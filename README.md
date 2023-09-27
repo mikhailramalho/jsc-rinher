@@ -23,3 +23,8 @@ ou
 ```bash
 ./docker.sh <path-to-ast.json>
 ```
+
+## tests
+```bash
+./tests.sh
+```

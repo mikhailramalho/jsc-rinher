@@ -1,0 +1,147 @@
+{
+    "name": "41.rinha",
+    "expression": {
+        "kind": "Let",
+        "name": {
+            "text": "add",
+            "location": {
+                "start": 4,
+                "end": 7,
+                "filename": "41.rinha"
+            }
+        },
+        "value": {
+            "kind": "Function",
+            "parameters": [
+                {
+                    "text": "a",
+                    "location": {
+                        "start": 13,
+                        "end": 14,
+                        "filename": "41.rinha"
+                    }
+                },
+                {
+                    "text": "b",
+                    "location": {
+                        "start": 16,
+                        "end": 17,
+                        "filename": "41.rinha"
+                    }
+                }
+            ],
+            "value": {
+                "kind": "Let",
+                "name": {
+                    "text": "c",
+                    "location": {
+                        "start": 32,
+                        "end": 33,
+                        "filename": "41.rinha"
+                    }
+                },
+                "value": {
+                    "kind": "Binary",
+                    "lhs": {
+                        "kind": "Var",
+                        "text": "a",
+                        "location": {
+                            "start": 36,
+                            "end": 37,
+                            "filename": "41.rinha"
+                        }
+                    },
+                    "op": "Add",
+                    "rhs": {
+                        "kind": "Var",
+                        "text": "b",
+                        "location": {
+                            "start": 40,
+                            "end": 41,
+                            "filename": "41.rinha"
+                        }
+                    },
+                    "location": {
+                        "start": 36,
+                        "end": 41,
+                        "filename": "41.rinha"
+                    }
+                },
+                "next": {
+                    "kind": "Var",
+                    "text": "c",
+                    "location": {
+                        "start": 47,
+                        "end": 48,
+                        "filename": "41.rinha"
+                    }
+                },
+                "location": {
+                    "start": 28,
+                    "end": 48,
+                    "filename": "41.rinha"
+                }
+            },
+            "location": {
+                "start": 10,
+                "end": 50,
+                "filename": "41.rinha"
+            }
+        },
+        "next": {
+            "kind": "Print",
+            "value": {
+                "kind": "Call",
+                "callee": {
+                    "kind": "Var",
+                    "text": "add",
+                    "location": {
+                        "start": 58,
+                        "end": 61,
+                        "filename": "41.rinha"
+                    }
+                },
+                "arguments": [
+                    {
+                        "kind": "Int",
+                        "value": 10,
+                        "location": {
+                            "start": 62,
+                            "end": 64,
+                            "filename": "41.rinha"
+                        }
+                    },
+                    {
+                        "kind": "Int",
+                        "value": 20,
+                        "location": {
+                            "start": 65,
+                            "end": 67,
+                            "filename": "41.rinha"
+                        }
+                    }
+                ],
+                "location": {
+                    "start": 58,
+                    "end": 68,
+                    "filename": "41.rinha"
+                }
+            },
+            "location": {
+                "start": 52,
+                "end": 69,
+                "filename": "41.rinha"
+            }
+        },
+        "location": {
+            "start": 0,
+            "end": 69,
+            "filename": "41.rinha"
+        }
+    },
+    "location": {
+        "start": 0,
+        "end": 69,
+        "filename": "41.rinha"
+    }
+}
