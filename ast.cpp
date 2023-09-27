@@ -1,5 +1,9 @@
+#include <algorithm>
 #include <fstream>
 #include <iostream>
+#include <execution>
+#include <jsoncpp/json/reader.h>
+#include <jsoncpp/json/value.h>
 #include <unordered_map>
 
 #include "ast.h"
@@ -53,23 +57,23 @@ std::string getOpString(Ast::BinaryOp op) {
   case Ast::Gte:
     return ">=";
   case Ast::And:
-    return "&";
+    return "&&";
   case Ast::Or:
-    return "|";
+    return "||";
   }
-  return "";
+  __builtin_unreachable();
 }
 
-auto createBinaryOpFromJson(const Json::Value &json) -> Ast::BinaryOp {
+Ast::BinaryOp createBinaryOpFromJson(const Json::Value &json) {
   return binaryOpLookupTable[json.asString()];
 }
 
-auto createParameterFromJson(const Json::Value &json) -> Ast::Parameter {
-  has_properties_or_abort(json, "text");
+Ast::Parameter createParameterFromJson(const Json::Value &json) {
+  has_properties_or_abort(json, "text", "location");
   return {json["text"].asString()};
 }
 
-auto createTermFromJson(const Json::Value &json) -> std::unique_ptr<Ast::Node> {
+std::unique_ptr<Ast::Node> createTermFromJson(const Json::Value &json) {
   has_properties_or_abort(json, "kind", "location");
 
   const std::string &kind = json["kind"].asString();
@@ -90,18 +94,20 @@ auto createTermFromJson(const Json::Value &json) -> std::unique_ptr<Ast::Node> {
   case Ast::CallKind: {
     has_properties_or_abort(json, "arguments", "callee");
 
-    std::vector<std::unique_ptr<Ast::Node>> argVec;
-    for (const Json::Value &js : json["arguments"]) {
-      argVec.push_back(createTermFromJson(js));
-    }
+    auto const &jsonArgs = json["arguments"];
+    std::vector<std::unique_ptr<Ast::Node>> args;
+    args.reserve(jsonArgs.size());
+
+    std::for_each(
+        std::execution::par, jsonArgs.begin(), jsonArgs.end(),
+        [&](auto &&item) { args.push_back(createTermFromJson(item)); });
 
     return std::make_unique<Ast::Call>(createTermFromJson(json["callee"]),
-                                       std::move(argVec));
+                                       std::move(args));
   }
 
   case Ast::BinaryKind:
     has_properties_or_abort(json, "lhs", "op", "rhs");
-
     return std::make_unique<Ast::Binary>(createTermFromJson(json["lhs"]),
                                          createBinaryOpFromJson(json["op"]),
                                          createTermFromJson(json["rhs"]));
@@ -109,11 +115,15 @@ auto createTermFromJson(const Json::Value &json) -> std::unique_ptr<Ast::Node> {
   case Ast::FunctionKind: {
     has_properties_or_abort(json, "parameters", "value", "location");
 
-    std::vector<Ast::Parameter> paramVec;
-    for (Json::Value const &js : json["parameters"])
-      paramVec.push_back(createParameterFromJson(js["name"]));
+    auto const &jsonParams = json["parameters"];
+    std::vector<Ast::Parameter> params;
+    params.reserve(jsonParams.size());
 
-    return std::make_unique<Ast::Function>(paramVec,
+    std::for_each(
+        std::execution::par, jsonParams.begin(), jsonParams.end(),
+        [&](auto &&item) { params.push_back(createParameterFromJson(item)); });
+
+    return std::make_unique<Ast::Function>(params,
                                            createTermFromJson(json["value"]));
   }
 
@@ -125,7 +135,6 @@ auto createTermFromJson(const Json::Value &json) -> std::unique_ptr<Ast::Node> {
 
   case Ast::IfKind:
     has_properties_or_abort(json, "condition", "then", "otherwise");
-
     return std::make_unique<Ast::If>(createTermFromJson(json["condition"]),
                                      createTermFromJson(json["then"]),
                                      createTermFromJson(json["otherwise"]));
@@ -250,20 +259,23 @@ std::string getStringValueOfTerm(const Ast::Term &value) {
 
 } // namespace
 
-int Ast::File::dumpToFile(const std::string &filename) const {
+int generateFromJson(const char *pathToJson) {
+  std::ifstream fss(pathToJson);
+
+  Json::Value json;
+  Json::Reader reader;
+  reader.parse(fss, json);
+
+  has_properties_or_abort(json, "name", "expression", "location");
+  auto ast = createTermFromJson(json["expression"]);
+
   std::ofstream file;
-  file.open(filename);
+  file.open("generated_main.cpp");
 
   file << "int gen_main() {\n";
-  file << getStringValueOfTerm(term) << ";\n";
+  file << getStringValueOfTerm(ast) << ";\n";
   file << "return 0;\n";
   file << "}\n";
   file.close();
   return 0;
-}
-
-std::unique_ptr<Ast::File> Ast::createNodeFromJson(const Json::Value &json) {
-  has_properties_or_abort(json, "name", "expression", "location");
-  return std::make_unique<Ast::File>(json["name"].asString(),
-                                     createTermFromJson(json["expression"]));
 }

@@ -45,4 +45,4 @@ int gen_main();
 
 int main() { return gen_main(); }
 
-#include "gen_main.cpp"
+#include "generated_main.cpp"

@@ -33,13 +33,6 @@ struct Node {
 
 using Term = std::unique_ptr<Node>;
 
-struct File {
-  const std::string name;
-  Term term{};
-  File(const std::string &_name, Term t) : name(_name), term(std::move(t)) {}
-  int dumpToFile(const std::string &filename) const;
-} __attribute__((aligned(16)));
-
 struct Int : public Node {
   int32_t value{};
   explicit Int(int32_t value) : Node(IntKind), value(value) {}
@@ -136,7 +129,5 @@ struct Second : public Node {
   explicit Second(Term value) : Node(SecondKind), value(std::move(value)) {}
   ~Second() override = default;
 };
-
-std::unique_ptr<Ast::File> createNodeFromJson(const Json::Value &json);
 
 }; // namespace Ast
