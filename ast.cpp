@@ -315,13 +315,16 @@ static inline std::string getStringValueOfTerm(const Ast::Term &value,
           .append(";\n");
     }
 
-    auto const &body = getStringValueOfTerm(
-        static_cast<Ast::Let *>(value.get())->next, value, file);
+    auto const &next = static_cast<Ast::Let *>(value.get())->next;
+    auto const &body = getStringValueOfTerm(next, parent, file);
 
-    bool must_return = (static_cast<Ast::Let *>(value.get())->next->kind != Ast::LetKind);
-    add_return_if_needed;
-    response.append(body);
-    add_semicolon_if_needed;
+    {
+      bool must_return =
+          (next->kind != Ast::LetKind && next->kind != Ast::IfKind && parent != nullptr);
+      add_return_if_needed;
+      response.append(body);
+      add_semicolon_if_needed;
+    }
 
     return response;
   }
@@ -338,23 +341,28 @@ static inline std::string getStringValueOfTerm(const Ast::Term &value,
     response.append("if (").append(getStringValueOfTerm(
         static_cast<Ast::If *>(value.get())->condition, value, file)).append(") {\n");
 
-    auto const &then = static_cast<Ast::If *>(value.get())->then;
-    auto const &then_str = getStringValueOfTerm(then, value, file);
+    {
+      auto const &then = static_cast<Ast::If *>(value.get())->then;
+      auto const &then_str = getStringValueOfTerm(then, value, file);
 
-    bool must_return = (then->kind != Ast::LetKind);
-    add_return_if_needed;
-    response.append(then_str);
-    add_semicolon_if_needed;
+      bool must_return = (then->kind != Ast::LetKind && then->kind != Ast::IfKind);
+      add_return_if_needed;
+      response.append(then_str);
+      add_semicolon_if_needed;
+    }
 
     response.append("}\nelse {\n");
 
-    auto const &otherwise = static_cast<Ast::If *>(value.get())->otherwise;
-    auto const &otherwise_str = getStringValueOfTerm(otherwise, value, file);
+    {
+      auto const &otherwise = static_cast<Ast::If *>(value.get())->otherwise;
+      auto const &otherwise_str = getStringValueOfTerm(otherwise, value, file);
 
-    must_return = (otherwise->kind != Ast::LetKind);
-    add_return_if_needed;
-    response.append(otherwise_str);
-    add_semicolon_if_needed;
+      bool must_return =
+          (otherwise->kind != Ast::LetKind && otherwise->kind != Ast::IfKind);
+      add_return_if_needed;
+      response.append(otherwise_str);
+      add_semicolon_if_needed;
+    }
 
     return response.append("}");
   }
