@@ -1,28 +1,15 @@
-#include <functional>
+#include "out.h"
 
-// template <typename T0> auto sum_fn(T0 n) {
-//   if (n == 1) {
-//     return n;
-//   } else {
-//     return n + sum_fn(n - 1);
-//   }
-// }
-
-// std::function<decltype(sum_fn<decltype(5)>)> sum = sum_fn<decltype(5)>;
-
-template <typename T0> auto fib_fn(T0 n) {
-  if (n < 2)
+template <typename T0> auto fibbo(T0 n) {
+  if (__lt(n, 2)) {
     return n;
-  return fib_fn(n - 1) + fib_fn(n - 2);
-}
-
-int generated_main() {
-  std::function<decltype(fib_fn<decltype(46)>)> f = fib_fn<decltype(46)>;
-  print(f(46));
-  // print(sum(46));
-  auto tuple = __tuple<decltype(1), decltype(2)>{
-    print(1), print(2)
+  } else {
+    return __add(fibbo(__sub(n, 1)), fibbo(__sub(n, 2)));
   };
-
+}
+int main() {
+  auto _ = print("@!compile::");
+  ;
+  print(__add("@!fibbo::", __add(fibbo(15), "")));
   return 0;
 }
