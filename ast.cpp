@@ -182,6 +182,8 @@ std::unique_ptr<Ast::Node> createTermFromJson(const Json::Value &json) {
 
 int anon_counter = 0;
 
+std::unordered_map<Ast::Term::pointer, std::string> functionNameCache;
+
 static inline std::string getStringValueOfTerm(const Ast::Term &value,
                                                const Ast::Term &parent,
                                                std::ofstream &file) {
@@ -233,7 +235,10 @@ static inline std::string getStringValueOfTerm(const Ast::Term &value,
   }
 
   case Ast::FunctionKind: {
-    auto const &name = (parent->kind == Ast::LetKind)
+    if (functionNameCache.contains(value.get()))
+      return functionNameCache[value.get()];
+
+    std::string name = (parent->kind == Ast::LetKind)
                            ? static_cast<Ast::Let *>(parent.get())->name
                            : "__anon_fn_" + (std::to_string(anon_counter++));
 
@@ -242,10 +247,11 @@ static inline std::string getStringValueOfTerm(const Ast::Term &value,
     bool const generate_def =
         (parent->kind == Ast::LetKind) || (parent->kind == Ast::CallKind);
 
+    auto const &f = static_cast<Ast::Function *>(value.get());
+    std::size_t const numParams = f->parameters.size();
+
     std::string function_def;
     if (generate_def) {
-      auto const &f = static_cast<Ast::Function *>(value.get());
-      std::size_t const numParams = f->parameters.size();
       if (numParams) {
         function_def.append("template <");
         for (std::size_t i = 0; i < numParams; i++) {
@@ -280,13 +286,38 @@ static inline std::string getStringValueOfTerm(const Ast::Term &value,
         function_def.append(";");
 
       function_def.append("}");
+
+      // If the parent was a call, we need to return the name of the function
+      // with the template instantiated
+      if (parent->kind == Ast::CallKind) {
+        auto const &c = static_cast<Ast::Call *>(parent.get());
+        std::size_t const numArgs = c->arguments.size();
+        if (numArgs) {
+          name.append("<");
+          for (std::size_t i = 0; i < numArgs; i++) {
+
+            // We won't be adding the current function to the name
+            if (c->arguments[i] == value)
+              continue;
+
+            name.append("decltype(")
+                .append(getStringValueOfTerm(c->arguments[i], value, file))
+                .append(")");
+            if (i < (numArgs - 1))
+              name.append(", ");
+          }
+          name.append(">");
+        }
+      }
     } else {
-      // Anon function: we don't care since it won't ever be executed
+      // Anon function: generate as lambda
       function_def.append("void ").append(name).append("() {};");
     }
 
     file << function_def;
-    return generate_def ? "" : name;
+
+    functionNameCache[value.get()] = name;
+    return name;
   }
 
   case Ast::CallKind: {
@@ -296,10 +327,10 @@ static inline std::string getStringValueOfTerm(const Ast::Term &value,
         .append("(");
 
     auto const &c = static_cast<Ast::Call *>(value.get());
-    std::size_t const numParams = c->arguments.size();
-    for (std::size_t i = 0; i < numParams; i++) {
+    std::size_t const numArgs = c->arguments.size();
+    for (std::size_t i = 0; i < numArgs; i++) {
       response.append(getStringValueOfTerm(c->arguments[i], value, file));
-      if (i < (numParams - 1))
+      if (i < (numArgs - 1))
         response.append(", ");
     }
 
