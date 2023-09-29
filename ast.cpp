@@ -458,9 +458,8 @@ getJulia(const Ast::Term &value, const Ast::Term &parent, std::ofstream &file) {
   std::string response;
   switch (value->kind) {
   case Ast::IntKind:
-    return response.append(" Int32(")
-        .append(std::to_string(static_cast<Ast::Int *>(value.get())->value))
-        .append(")");
+    return response.append(" ")
+        .append(std::to_string(static_cast<Ast::Int *>(value.get())->value));
 
   case Ast::BoolKind:
     return (static_cast<Ast::Bool *>(value.get())->value ? " true "

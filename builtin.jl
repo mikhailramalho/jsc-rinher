@@ -1,4 +1,4 @@
-function __print(x::Union{Int32, Int64, String, Bool, Tuple{Any, Any}})
+function __print(x::Union{Int, String, Bool, Tuple{Any, Any}})
     println(x)
     return x
 end
@@ -8,7 +8,7 @@ function __print(x)
     return "<#closure>"
 end
 
-function __add(x::Int32, y::Int32)
+function __add(x::Int, y::Int)
     return x + y
 end
 
@@ -16,35 +16,35 @@ function __add(x::String, y::String)
     return x * y
 end
 
-function __add(x::String, y::Int32)
+function __add(x::String, y::Int)
     return x * string(y)
 end
 
-function __add(x::Int32, y::String)
+function __add(x::Int, y::String)
     return string(x) * y
 end
 
-function __sub(x::Int32, y::Int32)
+function __sub(x::Int, y::Int)
     return x - y
 end
 
-function __mul(x::Int32, y::Int32)
+function __mul(x::Int, y::Int)
     return x * y
 end
 
-function __div(x::Int32, y::Int32) ::Int32
-    return trunc(Int32, x / y)
+function __div(x::Int, y::Int) ::Int
+    return trunc(Int, x / y)
 end
 
-function __rem(x::Int32, y::Int32)
-    return trunc(Int32, x % y)
+function __rem(x::Int, y::Int)
+    return trunc(Int, x % y)
 end
 
 function __eq(x::Bool, y::Bool)
     return x == y
 end
 
-function __eq(x::Int32, y::Int32)
+function __eq(x::Int, y::Int)
     return x == y
 end
 
@@ -56,7 +56,7 @@ function __noteq(x::Bool, y::Bool)
     return x != y
 end
 
-function __noteq(x::Int32, y::Int32)
+function __noteq(x::Int, y::Int)
     return x != y
 end
 
@@ -64,19 +64,19 @@ function __noteq(x::String, y::String)
     return x != y
 end
 
-function __lte(x::Int32, y::Int32)
+function __lte(x::Int, y::Int)
     return x <= y
 end
 
-function __lt(x::Int32, y::Int32)
+function __lt(x::Int, y::Int)
     return x < y
 end
 
-function __gte(x::Int32, y::Int32)
+function __gte(x::Int, y::Int)
     return x >= y
 end
 
-function __gt(x::Int32, y::Int32)
+function __gt(x::Int, y::Int)
     return x > y
 end
 
