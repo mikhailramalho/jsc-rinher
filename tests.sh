@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -x
+#set -x
 
 docker buildx build --platform linux/amd64 -f ./Dockerfile -t jsc-rinher .
 
