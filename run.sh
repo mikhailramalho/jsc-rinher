@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -x
+# set -x
 
 rm -f generated_main.cpp > /dev/null
 rm -f cpp-rinher-runner > /dev/null
@@ -20,5 +20,5 @@ fi
 
 ./cpp-rinher-compiler $1 0
 
-#./julia-1.9.3/bin/julia generated_main.jl
-julia generated_main.jl
+./julia-1.9.3/bin/julia generated_main.jl
+#julia generated_main.jl
