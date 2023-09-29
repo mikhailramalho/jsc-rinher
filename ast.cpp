@@ -453,9 +453,130 @@ static inline std::string getStringValueOfTerm(const Ast::Term &value,
   __builtin_unreachable();
 }
 
+static inline std::string
+getJulia(const Ast::Term &value, const Ast::Term &parent, std::ofstream &file) {
+  std::string response;
+  switch (value->kind) {
+  case Ast::IntKind:
+    return response.append("Int32(")
+        .append(std::to_string(static_cast<Ast::Int *>(value.get())->value))
+        .append(")");
+
+  case Ast::BoolKind:
+    return (static_cast<Ast::Bool *>(value.get())->value ? "true" : "false");
+
+  case Ast::StrKind:
+    return response.append("\"")
+        .append(static_cast<Ast::Str *>(value.get())->value)
+        .append("\"");
+
+  case Ast::VarKind:
+    return static_cast<Ast::Var *>(value.get())->text;
+
+  case Ast::TupleKind:
+    return response.append("(")
+        .append(getJulia(static_cast<Ast::Tuple *>(value.get())->first, value,
+                         file))
+        .append(", ")
+        .append(getJulia(static_cast<Ast::Tuple *>(value.get())->second, value,
+                         file))
+        .append(")");
+
+  case Ast::BinaryKind:
+    return response
+        .append(getOpString(static_cast<Ast::Binary *>(value.get())->op))
+        .append("(")
+        .append(
+            getJulia(static_cast<Ast::Binary *>(value.get())->lhs, value, file))
+        .append(", ")
+        .append(
+            getJulia(static_cast<Ast::Binary *>(value.get())->rhs, value, file))
+        .append(")");
+
+  case Ast::PrintKind:
+    return response.append("__print(")
+        .append(getJulia(static_cast<Ast::Print *>(value.get())->value, value,
+                         file))
+        .append(")\n");
+
+  case Ast::CallKind: {
+    response
+        .append(getJulia(static_cast<Ast::Call *>(value.get())->callee, value,
+                         file))
+        .append("(");
+
+    auto const &c = static_cast<Ast::Call *>(value.get());
+    std::size_t const numArgs = c->arguments.size();
+    for (std::size_t i = 0; i < numArgs; i++) {
+      response.append(getJulia(
+          static_cast<Ast::Call *>(value.get())->arguments[i], value, file));
+      if (i < (numArgs - 1))
+        response.append(", ");
+    }
+    return response.append(") ");
+  }
+
+  case Ast::FunctionKind: {
+    auto const &name = "__anon_fn_" + (std::to_string(anon_counter++));
+
+    file << "function " << name << "(";
+
+    auto const &f = static_cast<Ast::Function *>(value.get());
+    std::size_t const numParams = f->parameters.size();
+
+    for (std::size_t i = 0; i < numParams; i++) {
+      file << f->parameters[i];
+      if (i < (numParams - 1))
+        file << ", ";
+    }
+    file << ")\n";
+    file << getJulia(static_cast<Ast::Function *>(value.get())->value, value,
+                     file);
+    file << "end\n";
+    return name;
+  }
+
+  case Ast::LetKind:
+    return response.append(static_cast<Ast::Let *>(value.get())->name)
+        .append(" = ")
+        .append(
+            getJulia(static_cast<Ast::Let *>(value.get())->value, value, file))
+        .append("\n")
+        .append(
+            getJulia(static_cast<Ast::Let *>(value.get())->next, value, file))
+        .append("\n");
+
+  case Ast::FirstKind:
+    return getJulia(static_cast<Ast::First *>(value.get())->value, value, file)
+        .append("[1]");
+
+  case Ast::SecondKind:
+    return getJulia(static_cast<Ast::First *>(value.get())->value, value, file)
+        .append("[2]");
+
+  case Ast::IfKind:
+    return response.append("if ")
+        .append(getJulia(static_cast<Ast::If *>(value.get())->condition, value,
+                         file))
+        .append("\n")
+        .append(
+            getJulia(static_cast<Ast::If *>(value.get())->then, value, file))
+        .append("\nelse\n")
+        .append(getJulia(static_cast<Ast::If *>(value.get())->otherwise, value,
+                         file))
+        .append("\nend\n");
+
+  case Ast::ProgramKind:;
+  }
+
+  ABORT(std::string("Missing support for term ")
+            .append(std::to_string(value->kind)));
+  __builtin_unreachable();
+}
+
 } // namespace
 
-int generateFromJson(const char *pathToJson) {
+int generateFromJson(const char *pathToJson, const char *mode) {
   std::ifstream fss(pathToJson);
 
   Json::Value json;
@@ -466,15 +587,22 @@ int generateFromJson(const char *pathToJson) {
   auto ast = createTermFromJson(json["expression"]);
 
   std::ofstream file;
-  file.open("generated_main.cpp");
-  file << "#include \"out.h\"\n\n";
+  if (atoi(mode)) {
+    file.open("generated_main.cpp");
+    file << "#include \"out.h\"\n\n";
 
-  auto main_body = getStringValueOfTerm(ast, nullptr, file);
+    auto main_body = getStringValueOfTerm(ast, nullptr, file);
 
-  file << "int main() {\n";
-  file << main_body << ";\n";
-  file << "return 0;\n";
-  file << "}\n";
-  file.close();
+    file << "int main() {\n";
+    file << main_body << ";\n";
+    file << "return 0;\n";
+    file << "}\n";
+    file.close();
+  } else {
+    file.open("generated_main.jl");
+    file << "include(\"builtin.jl\")\n\n";
+    file << getJulia(ast, nullptr, file);
+    file.close();
+  }
   return 0;
 }

@@ -1,15 +1,24 @@
 #!/bin/bash
 
+set -x
 
 rm -f generated_main.cpp > /dev/null
 rm -f cpp-rinher-runner > /dev/null
+rm -f generated_main.jl > /dev/null
 
-set -e
+./cpp-rinher-compiler $1 1
+if [ $? -eq 0 ]; then
 
-./cpp-rinher-compiler $1
+    # clang-format -i generated_main.cpp
 
-#clang-format -i generated_main.cpp
+    /usr/bin/c++ -O3 -DNDEBUG generated_main.cpp -o cpp-rinher-runner  -ljsoncpp -flto > /dev/null
+    if [ $? -eq 0 ]; then
+        ./cpp-rinher-runner
+        exit $?
+    fi
+fi
 
-/usr/bin/c++ -O3 -DNDEBUG generated_main.cpp -o cpp-rinher-runner  -ljsoncpp -flto
+./cpp-rinher-compiler $1 0
 
-./cpp-rinher-runner
+#./julia-1.9.3/bin/julia generated_main.jl
+julia generated_main.jl
