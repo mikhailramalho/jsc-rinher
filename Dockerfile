@@ -2,7 +2,7 @@
 FROM ubuntu:latest
 
 RUN apt update && \
-    apt install -y g++ git make curl tar zip cmake build-essential libjsoncpp-dev pkg-config wget
+    apt install -y g++ git make curl tar zip cmake build-essential libjsoncpp-dev pkg-config wget clang-15
 
 RUN wget -c https://julialang-s3.julialang.org/bin/linux/x64/1.9/julia-1.9.3-linux-x86_64.tar.gz
 RUN tar -xvf julia-1.9.3-linux-x86_64.tar.gz

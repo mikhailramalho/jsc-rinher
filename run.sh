@@ -11,7 +11,7 @@ if [ $? -eq 0 ]; then
 
     # clang-format -i generated_main.cpp
 
-    /usr/bin/c++ -std=c++17 -O3 -DNDEBUG generated_main.cpp -o cpp-rinher-runner  -ljsoncpp -flto > /dev/null 2>&1
+    clang++-15 -std=c++17 -O3 generated_main.cpp -o cpp-rinher-runner  -ljsoncpp -flto > /dev/null 2>&1
     if [ $? -eq 0 ]; then
         ./cpp-rinher-runner
         exit $?
