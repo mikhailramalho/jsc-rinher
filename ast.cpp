@@ -458,15 +458,16 @@ getJulia(const Ast::Term &value, const Ast::Term &parent, std::ofstream &file) {
   std::string response;
   switch (value->kind) {
   case Ast::IntKind:
-    return response.append("Int32(")
+    return response.append(" Int32(")
         .append(std::to_string(static_cast<Ast::Int *>(value.get())->value))
         .append(")");
 
   case Ast::BoolKind:
-    return (static_cast<Ast::Bool *>(value.get())->value ? "true" : "false");
+    return (static_cast<Ast::Bool *>(value.get())->value ? " true "
+                                                         : " false ");
 
   case Ast::StrKind:
-    return response.append("\"")
+    return response.append(" \"")
         .append(static_cast<Ast::Str *>(value.get())->value)
         .append("\"");
 
@@ -474,7 +475,7 @@ getJulia(const Ast::Term &value, const Ast::Term &parent, std::ofstream &file) {
     return static_cast<Ast::Var *>(value.get())->text;
 
   case Ast::TupleKind:
-    return response.append("(")
+    return response.append(" (")
         .append(getJulia(static_cast<Ast::Tuple *>(value.get())->first, value,
                          file))
         .append(", ")
@@ -491,16 +492,16 @@ getJulia(const Ast::Term &value, const Ast::Term &parent, std::ofstream &file) {
         .append(", ")
         .append(
             getJulia(static_cast<Ast::Binary *>(value.get())->rhs, value, file))
-        .append(")");
+        .append(") ");
 
   case Ast::PrintKind:
-    return response.append("__print(")
+    return response.append(" __print(")
         .append(getJulia(static_cast<Ast::Print *>(value.get())->value, value,
                          file))
         .append(")\n");
 
   case Ast::CallKind: {
-    response
+    response.append(" ")
         .append(getJulia(static_cast<Ast::Call *>(value.get())->callee, value,
                          file))
         .append("(");
@@ -513,13 +514,13 @@ getJulia(const Ast::Term &value, const Ast::Term &parent, std::ofstream &file) {
       if (i < (numArgs - 1))
         response.append(", ");
     }
-    return response.append(") ");
+    return response.append(")");
   }
 
   case Ast::FunctionKind: {
-    auto const &name = "__anon_fn_" + (std::to_string(anon_counter++));
+    auto const &name = " __anon_fn_" + (std::to_string(anon_counter++));
 
-    file << "function " << name << "(";
+    file << " function " << name << "(";
 
     auto const &f = static_cast<Ast::Function *>(value.get());
     std::size_t const numParams = f->parameters.size();
@@ -532,12 +533,13 @@ getJulia(const Ast::Term &value, const Ast::Term &parent, std::ofstream &file) {
     file << ")\n";
     file << getJulia(static_cast<Ast::Function *>(value.get())->value, value,
                      file);
-    file << "end\n";
+    file << "\nend\n";
     return name;
   }
 
   case Ast::LetKind:
-    return response.append(static_cast<Ast::Let *>(value.get())->name)
+    return response.append(" ")
+        .append(static_cast<Ast::Let *>(value.get())->name)
         .append(" = ")
         .append(
             getJulia(static_cast<Ast::Let *>(value.get())->value, value, file))
@@ -547,15 +549,19 @@ getJulia(const Ast::Term &value, const Ast::Term &parent, std::ofstream &file) {
         .append("\n");
 
   case Ast::FirstKind:
-    return getJulia(static_cast<Ast::First *>(value.get())->value, value, file)
+    return response.append(" ")
+        .append(getJulia(static_cast<Ast::First *>(value.get())->value, value,
+                         file))
         .append("[1]");
 
   case Ast::SecondKind:
-    return getJulia(static_cast<Ast::First *>(value.get())->value, value, file)
+    return response.append(" ")
+        .append(getJulia(static_cast<Ast::First *>(value.get())->value, value,
+                         file))
         .append("[2]");
 
   case Ast::IfKind:
-    return response.append("if ")
+    return response.append(" if ")
         .append(getJulia(static_cast<Ast::If *>(value.get())->condition, value,
                          file))
         .append("\n")
